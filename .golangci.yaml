@@ -1,6 +1,16 @@
 linters-settings:
+  depguard:
+    rules:
+      main:
+        allow:
+          - $gostd
+          - github.com/rs/zerolog
+          - github.com/ilyakaznacheev/cleanenv
+        deny:
+          - pkg: "github.com/pkg/errors"
+            desc: Should be replaced by standard lib errors package
   gci:
-    local-prefixes: github.com/evrone/go-clean-template
+    local-prefixes: github.com/romankravchuk/pastebin
   dupl:
     threshold: 100
   errorlint:
