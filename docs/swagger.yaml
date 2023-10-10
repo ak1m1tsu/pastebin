@@ -1,0 +1,9 @@
+basePath: /v1
+host: localhost:8080
+info:
+  contact: {}
+  description: Implementation pastebin API
+  title: Pastebin API
+  version: "1.0"
+paths: {}
+swagger: "2.0"

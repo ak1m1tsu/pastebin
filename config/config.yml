@@ -1,0 +1,7 @@
+app:
+  name: pastebin
+  version: 1.0
+http:
+  port: 8080
+logger:
+  level: debug
