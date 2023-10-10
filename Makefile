@@ -17,3 +17,15 @@ swag-v1:
 run: swag-v1
 	go mod tidy && go mod download && \
 	go run -tags migrate ./cmd/app
+
+.PHONY: compose-up
+compose-up:
+	docker-compose up --build -d && docker-compose logs -f
+
+.PHONY: compose-down
+compose-down:
+	docker-compose down --remove-orphans
+
+.PHONY: docker-rm-volume
+docker-rm-volume:
+	docker volume rm grafana-storage

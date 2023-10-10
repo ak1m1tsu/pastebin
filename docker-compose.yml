@@ -1,10 +1,51 @@
 version: '3.4'
 
+volumes:
+  grafana-storage:
+    driver: local
+
+networks:
+  pastebinnet:
+    driver: bridge
+
 services:
   pastebin:
     image: pastebin
+    container_name: app
     build:
       context: .
       dockerfile: ./Dockerfile
+    restart: unless-stopped
+    ports:
+      - 8080:8080
+    networks:
+      - pastebinnet
+
+  grafana:
+    image: grafana/grafana-oss
+    container_name: grafana
+    restart: unless-stopped
+    environment:
+      GF_INSTALL_PLUGINS: grafana-clock-panel
     ports:
       - 3000:3000
+    volumes:
+      - grafana-storage:/var/lib/grafana
+    networks:
+      - pastebinnet
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    restart: unless-stopped
+    ports:
+      - 9090:9090
+    volumes:
+      - ./prometheus:/etc/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    networks:
+      - pastebinnet
