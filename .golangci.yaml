@@ -2,15 +2,16 @@ linters-settings:
   depguard:
     rules:
       main:
-        allow:
-          - $gostd
-          - github.com/rs/zerolog
-          - github.com/ilyakaznacheev/cleanenv
+        files:
+        - $all
         deny:
           - pkg: "github.com/pkg/errors"
             desc: Should be replaced by standard lib errors package
   gci:
-    local-prefixes: github.com/romankravchuk/pastebin
+    sections:
+      - standard
+      - default
+      - blank
   dupl:
     threshold: 100
   errorlint:
@@ -68,7 +69,6 @@ linters:
     - asciicheck
     - bodyclose
     - cyclop
-    - deadcode
     - depguard
     - dogsled
     - dupl
@@ -112,7 +112,6 @@ linters:
     - rowserrcheck
     - sqlclosecheck
     - staticcheck
-    - structcheck
     - stylecheck
     - tparallel
     - thelper
@@ -120,7 +119,6 @@ linters:
     - unconvert
     - unparam
     - unused
-    - varcheck
     - wsl
     - whitespace
 
@@ -137,3 +135,7 @@ issues:
 run:
   skip-dirs:
     - docs
+    - genfiles$
+    - vendor$
+  skip-files:
+    - ".*\\.gen\\.go"

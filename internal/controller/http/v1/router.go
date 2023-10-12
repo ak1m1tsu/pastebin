@@ -7,8 +7,9 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	_ "github.com/romankravchuk/pastebin/docs"
 	swagger "github.com/swaggo/http-swagger/v2"
+
+	_ "github.com/romankravchuk/pastebin/docs" //
 )
 
 // NewRouter

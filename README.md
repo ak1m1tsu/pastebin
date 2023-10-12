@@ -1,1 +1,3 @@
 # Pastebin
+
+## High-level design

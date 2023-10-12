@@ -1,0 +1,11 @@
+PORT=9000
+EXPOSE_PORT=7328
+LOG_LEVEL=info
+PG_DSN=postgres://postgres:pa55word@postgres:5432/pastebin?sslmode=disable
+REDIS_DSN=redis://default:pa55word@redis:6379/1/
+
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=pa55word
+POSTGRES_DB=pastebin
+
+REDIS_PASSWORD=pa55word

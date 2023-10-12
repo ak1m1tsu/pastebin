@@ -1,7 +1,11 @@
 version: '3.4'
 
 volumes:
-  grafana-storage:
+  grafana:
+    driver: local
+  postgres:
+    driver: local
+  redis:
     driver: local
 
 networks:
@@ -16,28 +20,37 @@ services:
       context: .
       dockerfile: ./Dockerfile
     restart: unless-stopped
+    environment:
+      PG_DSN: ${PG_DSN}
+      REDIS_DSN: ${REDIS_DSN}
+      PORT: ${PORT}
     ports:
-      - 8080:8080
+      - ${EXPOSE_PORT}:${PORT}
     networks:
       - pastebinnet
+    depends_on:
+      - postgres
+      - redis
 
   grafana:
     image: grafana/grafana-oss
     container_name: grafana
-    restart: unless-stopped
+    restart: always
     environment:
       GF_INSTALL_PLUGINS: grafana-clock-panel
     ports:
       - 3000:3000
     volumes:
-      - grafana-storage:/var/lib/grafana
+      - grafana:/var/lib/grafana
     networks:
       - pastebinnet
+    depends_on:
+      - prometheus
 
   prometheus:
     image: prom/prometheus
     container_name: prometheus
-    restart: unless-stopped
+    restart: always
     ports:
       - 9090:9090
     volumes:
@@ -49,3 +62,41 @@ services:
       - '--web.console.templates=/usr/share/prometheus/consoles'
     networks:
       - pastebinnet
+    depends_on:
+      - pastebin
+
+  postgres:
+    image: postgres:alpine
+    container_name: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      PGDATA: /data/postgres
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    ports:
+      - 5432:5432
+    volumes:
+      - postgres:/data/postgres
+    networks:
+      - pastebinnet
+
+  redis:
+    image: redis:alpine
+    container_name: redis
+    restart: always
+    ports:
+      - 6379:6379
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    volumes:
+      - redis:/data

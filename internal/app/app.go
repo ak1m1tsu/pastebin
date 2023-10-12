@@ -1,7 +1,6 @@
 package app
 
 import (
-	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -10,11 +9,11 @@ import (
 	"github.com/romankravchuk/pastebin/config"
 	v1 "github.com/romankravchuk/pastebin/internal/controller/http/v1"
 	"github.com/romankravchuk/pastebin/pkg/httpserver"
-	"github.com/romankravchuk/pastebin/pkg/logger"
+	"github.com/romankravchuk/pastebin/pkg/log"
 )
 
 func Run(cfg *config.Config) {
-	l := logger.New(cfg.Log.Level)
+	l := log.New(os.Stderr, log.Stol(cfg.Log.Level))
 
 	// HTTP Server
 	handler := chi.NewMux()
@@ -25,16 +24,25 @@ func Run(cfg *config.Config) {
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGINT)
 
+	l.Info("app - Run - starting service", log.FF{
+		{Key: "name", Value: cfg.App.Name},
+		{Key: "version", Value: cfg.App.Version},
+		{Key: "port", Value: cfg.HTTP.Port},
+	})
+
 	select {
 	case s := <-interrupt:
-		l.Info("app - Run - signal: " + s.String())
+		l.Info("app - Run - signal", log.FF{{
+			Key:   "signal",
+			Value: s.String(),
+		}})
 	case err := <-srv.Notify():
-		l.Error(fmt.Errorf("app - Run - httpServer.Notify: %w", err))
+		l.Error("app - Run - httpServer.Notify", err, nil)
 	}
 
 	// Shutdown
 	err := srv.Shutdown()
 	if err != nil {
-		l.Error(fmt.Errorf("app - Run - httpServer.Shutdown: %w", err))
+		l.Error("app - Run - httpServer.Shutdown", err, nil)
 	}
 }

@@ -8,9 +8,11 @@ import (
 
 type (
 	Config struct {
-		App  `yaml:"app"`
-		HTTP `yaml:"http"`
-		Log  `yaml:"logger"`
+		App      `yaml:"app"`
+		HTTP     `yaml:"http"`
+		Log      `yaml:"logger"`
+		Postgres `yaml:"postgres"`
+		Redis    `yaml:"redis"`
 	}
 
 	App struct {
@@ -19,11 +21,19 @@ type (
 	}
 
 	HTTP struct {
-		Port string `yaml:"port"`
+		Port string `yaml:"port" env:"PORT"`
 	}
 
 	Log struct {
-		Level string `yaml:"level"`
+		Level string `yaml:"level" env:"LOG_LEVEL"`
+	}
+
+	Postgres struct {
+		DSN string `yaml:"dsn" env:"PG_DSN"`
+	}
+
+	Redis struct {
+		DSN string `yaml:"dsn" env:"REDIS_DSN"`
 	}
 )
 
