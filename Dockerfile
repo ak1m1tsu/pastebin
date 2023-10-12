@@ -17,4 +17,5 @@ FROM scratch
 COPY --from=builder /app/config /config
 COPY --from=builder /app/migrations /migrations
 COPY --from=builder /bin/app /app
+EXPOSE ${PORT}
 CMD [ "/app" ]

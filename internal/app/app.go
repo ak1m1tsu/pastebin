@@ -13,7 +13,7 @@ import (
 )
 
 func Run(cfg *config.Config) {
-	l := log.New(os.Stderr, log.Stol(cfg.Log.Level))
+	l := log.New(os.Stdout, log.Stol(cfg.Log.Level))
 
 	// HTTP Server
 	handler := chi.NewMux()

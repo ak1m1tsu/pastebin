@@ -7,13 +7,50 @@ volumes:
     driver: local
   redis:
     driver: local
+  minio:
+    driver: local
 
 networks:
   pastebinnet:
     driver: bridge
 
 services:
-  pastebin:
+  nginx:
+    image: nginx:alpine
+    container_name: loadbalancer
+    volumes:
+      - type: bind
+        source: ./build/nginx/nginx.conf
+        target: /etc/nginx/conf.d/default.conf
+        read_only: true
+    ports:
+      - "80:80"
+    depends_on:
+      - app
+      - app2
+    networks:
+      - pastebinnet
+
+  app2:
+    image: pastebin
+    container_name: app2
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    restart: unless-stopped
+    environment:
+      PG_DSN: ${PG_DSN}
+      REDIS_DSN: ${REDIS_DSN}
+      PORT: ${EXPOSE_PORT}
+    ports:
+      - ${PORT}:${EXPOSE_PORT}
+    networks:
+      - pastebinnet
+    depends_on:
+      - postgres
+      - redis
+
+  app:
     image: pastebin
     container_name: app
     build:
@@ -31,6 +68,7 @@ services:
     depends_on:
       - postgres
       - redis
+      - minio
 
   grafana:
     image: grafana/grafana-oss
@@ -54,7 +92,7 @@ services:
     ports:
       - 9090:9090
     volumes:
-      - ./prometheus:/etc/prometheus
+      - ./build/prometheus:/etc/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
@@ -63,7 +101,8 @@ services:
     networks:
       - pastebinnet
     depends_on:
-      - pastebin
+      - app
+      - app2
 
   postgres:
     image: postgres:alpine
@@ -100,3 +139,19 @@ services:
       REDIS_PASSWORD: ${REDIS_PASSWORD}
     volumes:
       - redis:/data
+
+  minio:
+    image: minio/minio
+    container_name: minio
+    restart: always
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    ports:
+      - "9000:9000"
+      - "8001:8001"
+    command: server --console-address ":8001" /data
+    volumes:
+      - minio:/data
+    networks:
+      - pastebinnet
