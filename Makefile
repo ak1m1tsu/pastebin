@@ -56,6 +56,11 @@ migrations/down: confirm
 	@echo 'Running down migrations...'
 	migrate -path="./migrations" -database ${POSTGRES_DSN} down
 
+.PHONY: mocks/generate
+mocks/generate:
+	@echo 'Generating mocks...'
+	go generate ./...
+
 # ==================================================================================== #
 # DOCKER
 # ==================================================================================== #
