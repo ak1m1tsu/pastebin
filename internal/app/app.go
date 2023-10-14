@@ -1,12 +1,14 @@
 package app
 
 import (
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/romankravchuk/pastebin/config"
+	"github.com/romankravchuk/pastebin/internal/controller/http/response"
 	v1 "github.com/romankravchuk/pastebin/internal/controller/http/v1"
 	"github.com/romankravchuk/pastebin/pkg/httpserver"
 	"github.com/romankravchuk/pastebin/pkg/log"
@@ -17,14 +19,23 @@ func Run(cfg *config.Config) {
 
 	// HTTP Server
 	handler := chi.NewMux()
-	v1.NewRouter(handler)
+	handler.NotFound(func(w http.ResponseWriter, r *http.Request) {
+		response.NotFound(w, r)
+	})
+	handler.MethodNotAllowed(func(w http.ResponseWriter, r *http.Request) {
+		response.MethodNotAllowed(w, r)
+	})
+	handler.Route("/api/v1", func(r chi.Router) {
+		v1.NewRouter(r, l)
+	})
+
 	srv := httpserver.New(handler, httpserver.Port(cfg.HTTP.Port))
 
 	// Waiting signal
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGINT)
 
-	l.Info("app - Run - starting service", log.FF{
+	l.Info("start the service", log.FF{
 		{Key: "name", Value: cfg.App.Name},
 		{Key: "version", Value: cfg.App.Version},
 		{Key: "port", Value: cfg.HTTP.Port},
@@ -32,17 +43,17 @@ func Run(cfg *config.Config) {
 
 	select {
 	case s := <-interrupt:
-		l.Info("app - Run - signal", log.FF{{
+		l.Info("catch shutdown signal", log.FF{{
 			Key:   "signal",
 			Value: s.String(),
 		}})
 	case err := <-srv.Notify():
-		l.Error("app - Run - httpServer.Notify", err, nil)
+		l.Error("catch listen and serve notification", err, nil)
 	}
 
 	// Shutdown
 	err := srv.Shutdown()
 	if err != nil {
-		l.Error("app - Run - httpServer.Shutdown", err, nil)
+		l.Error("shutdown the service", err, nil)
 	}
 }
