@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/romankravchuk/pastebin/internal/entity"
 )
@@ -21,10 +22,10 @@ func NewPastes(r PastesRepo, c PastesCache) *PastesUseCase {
 }
 
 // Create implements Pastes.
-func (uc *PastesUseCase) Create(ctx context.Context, p entity.Paste) error {
-	err := uc.repo.Store(ctx, p)
+func (uc *PastesUseCase) Create(ctx context.Context, p *entity.Paste) error {
+	err := uc.repo.Create(ctx, p)
 	if err != nil {
-		return err
+		return fmt.Errorf("PastesUseCase.Create: %w", err)
 	}
 
 	return nil
@@ -32,33 +33,33 @@ func (uc *PastesUseCase) Create(ctx context.Context, p entity.Paste) error {
 
 // Delete implements Pastes.
 func (uc *PastesUseCase) Delete(ctx context.Context, id string) error {
-	return uc.repo.DeletePaste(ctx, id)
+	return uc.repo.Delete(ctx, id)
 }
 
 // Get implements Pastes.
-func (uc *PastesUseCase) Get(ctx context.Context, id string) (entity.Paste, error) {
+func (uc *PastesUseCase) Get(ctx context.Context, id string) (*entity.Paste, error) {
 	paste, ok, err := uc.cache.Get(ctx, id)
 	if err != nil {
-		return paste, err
+		return nil, fmt.Errorf("PastesUseCase.Get: %w", err)
 	}
 
 	if ok {
 		return paste, nil
 	}
 
-	paste, err = uc.repo.GetPaste(ctx, id)
+	paste, err = uc.repo.Get(ctx, id)
 	if err != nil {
-		return paste, err
+		return nil, fmt.Errorf("PastesUseCase.Get: %w", err)
 	}
 
-	return paste, err
+	return paste, nil
 }
 
 // Update implements Pastes.
 func (uc *PastesUseCase) Update(ctx context.Context, p *entity.Paste) error {
-	err := uc.repo.UpdatePaste(ctx, p)
+	err := uc.repo.Update(ctx, p)
 	if err != nil {
-		return err
+		return fmt.Errorf("PastesUseCase.Update: %w", err)
 	}
 
 	return nil

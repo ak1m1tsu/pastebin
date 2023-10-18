@@ -13,13 +13,13 @@ type PastesBlobStorage struct {
 	mock.Mock
 }
 
-// Create provides a mock function with given fields: _a0, _a1, _a2
-func (_m *PastesBlobStorage) Create(_a0 context.Context, _a1 string, _a2 []byte) error {
-	ret := _m.Called(_a0, _a1, _a2)
+// Create provides a mock function with given fields: ctx, bucket, id, data
+func (_m *PastesBlobStorage) Create(ctx context.Context, bucket string, id string, data []byte) error {
+	ret := _m.Called(ctx, bucket, id, data)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, []byte) error); ok {
-		r0 = rf(_a0, _a1, _a2)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, []byte) error); ok {
+		r0 = rf(ctx, bucket, id, data)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -27,13 +27,13 @@ func (_m *PastesBlobStorage) Create(_a0 context.Context, _a1 string, _a2 []byte)
 	return r0
 }
 
-// Delete provides a mock function with given fields: _a0, _a1
-func (_m *PastesBlobStorage) Delete(_a0 context.Context, _a1 string) error {
-	ret := _m.Called(_a0, _a1)
+// Delete provides a mock function with given fields: ctx, id
+func (_m *PastesBlobStorage) Delete(ctx context.Context, id string) error {
+	ret := _m.Called(ctx, id)
 
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, string) error); ok {
-		r0 = rf(_a0, _a1)
+		r0 = rf(ctx, id)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -41,17 +41,17 @@ func (_m *PastesBlobStorage) Delete(_a0 context.Context, _a1 string) error {
 	return r0
 }
 
-// Get provides a mock function with given fields: _a0, _a1
-func (_m *PastesBlobStorage) Get(_a0 context.Context, _a1 string) ([]byte, error) {
-	ret := _m.Called(_a0, _a1)
+// Get provides a mock function with given fields: ctx, id
+func (_m *PastesBlobStorage) Get(ctx context.Context, id string) ([]byte, error) {
+	ret := _m.Called(ctx, id)
 
 	var r0 []byte
 	var r1 error
 	if rf, ok := ret.Get(0).(func(context.Context, string) ([]byte, error)); ok {
-		return rf(_a0, _a1)
+		return rf(ctx, id)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context, string) []byte); ok {
-		r0 = rf(_a0, _a1)
+		r0 = rf(ctx, id)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]byte)
@@ -59,7 +59,7 @@ func (_m *PastesBlobStorage) Get(_a0 context.Context, _a1 string) ([]byte, error
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
-		r1 = rf(_a0, _a1)
+		r1 = rf(ctx, id)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -67,13 +67,13 @@ func (_m *PastesBlobStorage) Get(_a0 context.Context, _a1 string) ([]byte, error
 	return r0, r1
 }
 
-// Update provides a mock function with given fields: _a0, _a1, _a2
-func (_m *PastesBlobStorage) Update(_a0 context.Context, _a1 string, _a2 []byte) error {
-	ret := _m.Called(_a0, _a1, _a2)
+// Update provides a mock function with given fields: ctx, id, data
+func (_m *PastesBlobStorage) Update(ctx context.Context, id string, data []byte) error {
+	ret := _m.Called(ctx, id, data)
 
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, string, []byte) error); ok {
-		r0 = rf(_a0, _a1, _a2)
+		r0 = rf(ctx, id, data)
 	} else {
 		r0 = ret.Error(0)
 	}

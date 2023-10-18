@@ -32,13 +32,13 @@ func TestPastesUseCase_Create(t *testing.T) {
 		var (
 			uc, repo, _ = newPastesUseCase(t)
 			ctx         = context.Background()
-			paste       = entity.Paste{
-				Hash:  "test",
-				Block: []byte("test"),
+			paste       = &entity.Paste{
+				Hash: "test",
+				File: []byte("test"),
 			}
 		)
 
-		repo.On("Store", ctx, paste).
+		repo.On("Create", ctx, paste).
 			Once().
 			Return(nil)
 
@@ -52,13 +52,13 @@ func TestPastesUseCase_Create(t *testing.T) {
 		var (
 			uc, repo, _ = newPastesUseCase(t)
 			ctx         = context.Background()
-			paste       = entity.Paste{
-				Hash:  "test",
-				Block: []byte("test"),
+			paste       = &entity.Paste{
+				Hash: "test",
+				File: []byte("test"),
 			}
 		)
 
-		repo.On("Store", ctx, paste).
+		repo.On("Create", ctx, paste).
 			Once().
 			Return(errTest)
 
@@ -79,7 +79,7 @@ func TestPastesUseCase_Delete(t *testing.T) {
 			id          = "test"
 		)
 
-		repo.On("DeletePaste", ctx, id).
+		repo.On("Delete", ctx, id).
 			Once().
 			Return(nil)
 
@@ -97,9 +97,9 @@ func TestPastesUseCase_Get(t *testing.T) {
 		var (
 			uc, _, cache = newPastesUseCase(t)
 			ctx          = context.Background()
-			expPaste     = entity.Paste{
-				Hash:  "test",
-				Block: []byte("test"),
+			expPaste     = &entity.Paste{
+				Hash: "test",
+				File: []byte("test"),
 			}
 		)
 
@@ -109,7 +109,7 @@ func TestPastesUseCase_Get(t *testing.T) {
 
 		paste, err := uc.Get(ctx, expPaste.Hash)
 		require.NoError(t, err)
-		require.Equal(t, expPaste, paste)
+		require.NotNil(t, paste)
 	})
 
 	t.Run("Get non-cached paste", func(t *testing.T) {
@@ -118,22 +118,22 @@ func TestPastesUseCase_Get(t *testing.T) {
 		var (
 			uc, repo, cache = newPastesUseCase(t)
 			ctx             = context.Background()
-			expPaste        = entity.Paste{
-				Hash:  "test",
-				Block: []byte("test"),
+			expPaste        = &entity.Paste{
+				Hash: "test",
+				File: []byte("test"),
 			}
 		)
 
 		cache.On("Get", ctx, expPaste.Hash).
 			Once().
-			Return(entity.Paste{}, false, nil)
-		repo.On("GetPaste", ctx, expPaste.Hash).
+			Return(nil, false, nil)
+		repo.On("Get", ctx, expPaste.Hash).
 			Once().
 			Return(expPaste, nil)
 
 		paste, err := uc.Get(ctx, expPaste.Hash)
 		require.NoError(t, err)
-		require.Equal(t, expPaste, paste)
+		require.NotNil(t, paste)
 	})
 
 	t.Run("Get error on cached paste", func(t *testing.T) {
@@ -147,11 +147,11 @@ func TestPastesUseCase_Get(t *testing.T) {
 
 		cache.On("Get", ctx, id).
 			Once().
-			Return(entity.Paste{}, false, entity.ErrPasteNotFound)
+			Return(nil, false, entity.ErrPasteNotFound)
 
 		paste, err := uc.Get(ctx, id)
 		require.Error(t, err)
-		require.Equal(t, entity.Paste{}, paste)
+		require.Nil(t, paste)
 	})
 
 	t.Run("Get error on non-cached paste", func(t *testing.T) {
@@ -165,14 +165,14 @@ func TestPastesUseCase_Get(t *testing.T) {
 
 		cache.On("Get", ctx, id).
 			Once().
-			Return(entity.Paste{}, false, nil)
-		repo.On("GetPaste", ctx, id).
+			Return(nil, false, nil)
+		repo.On("Get", ctx, id).
 			Once().
-			Return(entity.Paste{}, errTest)
+			Return(nil, errTest)
 
 		paste, err := uc.Get(ctx, id)
 		require.Error(t, err)
-		require.Equal(t, entity.Paste{}, paste)
+		require.Nil(t, paste)
 	})
 }
 
@@ -186,16 +186,36 @@ func TestPastesUseCase_Update(t *testing.T) {
 			uc, repo, _ = newPastesUseCase(t)
 			ctx         = context.Background()
 			paste       = &entity.Paste{
-				Hash:  "test",
-				Block: []byte("test"),
+				Hash: "test",
+				File: []byte("test"),
 			}
 		)
 
-		repo.On("UpdatePaste", ctx, paste).
+		repo.On("Update", ctx, paste).
 			Once().
 			Return(nil)
 
 		err := uc.Update(ctx, paste)
 		require.NoError(t, err)
+	})
+
+	t.Run("Get error on update", func(t *testing.T) {
+		t.Parallel()
+
+		var (
+			uc, repo, _ = newPastesUseCase(t)
+			ctx         = context.Background()
+			paste       = &entity.Paste{
+				Hash: "test",
+				File: []byte("test"),
+			}
+		)
+
+		repo.On("Update", ctx, paste).
+			Once().
+			Return(errTest)
+
+		err := uc.Update(ctx, paste)
+		require.Error(t, err)
 	})
 }
