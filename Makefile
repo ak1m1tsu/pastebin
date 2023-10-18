@@ -28,8 +28,8 @@ deps:
 # DEVELOPMENT
 # ==================================================================================== #
 
-## swag: generate swagger documentation for http handlers
-.PHONY: swag
+## swag-v1: generate swagger documentation for http handlers
+.PHONY: swag-v1
 swag-v1:
 	swag fmt && swag init -g internal/controller/http/v1/router.go
 
@@ -56,6 +56,7 @@ migrations/down: confirm
 	@echo 'Running down migrations...'
 	migrate -path="./migrations" -database ${POSTGRES_DSN} down
 
+## mocks/generate: generate mocks for interfaces
 .PHONY: mocks/generate
 mocks/generate:
 	@echo 'Generating mocks...'
