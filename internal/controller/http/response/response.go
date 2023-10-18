@@ -50,8 +50,8 @@ func Conflict(w http.ResponseWriter, r *http.Request) {
 	response(w, r, http.StatusConflict, v)
 }
 
-func UnprocessableEntity(w http.ResponseWriter, r *http.Request) {
-	v := map[string]any{"error": "unprocessable entity"}
+func UnprocessableEntity(w http.ResponseWriter, r *http.Request, errs map[string]string) {
+	v := map[string]any{"error": errs}
 	response(w, r, http.StatusUnprocessableEntity, v)
 }
 

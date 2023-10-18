@@ -1,9 +1,142 @@
-basePath: /v1
+basePath: /api/v1
+definitions:
+  Paste:
+    description: Тело запроса для создания пасты.
+    properties:
+      expires:
+        description: Время, через которое паста становится не доступной
+        example: 30m
+        type: string
+      format:
+        description: Формат текста
+        enum:
+        - json
+        - yaml
+        - toml
+        example: json
+        type: string
+      name:
+        description: Название
+        example: thie is paste
+        type: string
+      password:
+        description: Пароль для получения доступа к пасте
+        example: hello
+        type: string
+      text:
+        description: Текст пасты
+        example: this is my paste
+        type: string
+    type: object
 host: localhost:8080
 info:
   contact: {}
   description: Implementation pastebin API
   title: Pastebin API
   version: "1.0"
-paths: {}
+paths:
+  /pastes:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Паста
+        in: body
+        name: paste
+        required: true
+        schema:
+          $ref: '#/definitions/Paste'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              message:
+                type: string
+            type: object
+      summary: Создание нововой пасты
+      tags:
+      - pastes
+  /pastes/{hash}:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: Хеш пасты
+        in: path
+        name: hash
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              message:
+                type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Удаление пасты по хешу
+      tags:
+      - pastes
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Хеш пасты
+        in: path
+        name: hash
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              message:
+                type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      summary: Получениие пасту по хешу
+      tags:
+      - pastes
+  /token:
+    get:
+      parameters:
+      - description: Уникальный код, сгенерированный OAuth2 приложением
+        in: query
+        name: code
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              message:
+                type: string
+            type: object
+      summary: Получения авторизационных данных
+      tags:
+      - auth
+securityDefinitions:
+  Bearer:
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

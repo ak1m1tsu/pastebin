@@ -13,7 +13,7 @@ type AuthUseCase struct {
 	oauth OAuthWebAPI
 }
 
-func New(oauth OAuthWebAPI) *AuthUseCase {
+func NewAuth(oauth OAuthWebAPI) *AuthUseCase {
 	return &AuthUseCase{oauth: oauth}
 }
 

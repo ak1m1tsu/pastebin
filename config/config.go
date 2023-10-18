@@ -13,6 +13,7 @@ type (
 		Log      `yaml:"logger"`
 		Postgres `yaml:"postgres"`
 		Redis    `yaml:"redis"`
+		OAuth    `yaml:"oauth"`
 	}
 
 	App struct {
@@ -34,6 +35,11 @@ type (
 
 	Redis struct {
 		DSN string `yaml:"dsn" env:"REDIS_DSN"`
+	}
+
+	OAuth struct {
+		ClientID     string `yaml:"client_id" env:"OAUTH_CLIENT_ID"`
+		ClientSecret string `yaml:"client_secret" env:"OAUTH_CLIENT_SECRET"`
 	}
 )
 
