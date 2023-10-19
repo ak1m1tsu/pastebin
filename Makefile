@@ -31,7 +31,7 @@ deps:
 ## swag-v1: generate swagger documentation for http handlers
 .PHONY: swag-v1
 swag-v1:
-	swag fmt && swag init -g internal/controller/http/v1/router.go
+	swag fmt && swag init --pd -g internal/controller/http/v1/router.go
 
 ## run: start the cmd/app application
 .PHONY: run/app

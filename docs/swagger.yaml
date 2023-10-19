@@ -5,6 +5,11 @@ definitions:
     properties:
       expires:
         description: Время, через которое паста становится не доступной
+        enum:
+        - 30m
+        - 1h
+        - 1w
+        - 1mth
         example: 30m
         type: string
       format:
@@ -18,14 +23,32 @@ definitions:
       name:
         description: Название
         example: thie is paste
+        maxLength: 255
         type: string
       password:
         description: Пароль для получения доступа к пасте
         example: hello
+        maxLength: 255
         type: string
       text:
         description: Текст пасты
         example: this is my paste
+        type: string
+    required:
+    - format
+    - text
+    type: object
+  github_com_romankravchuk_pastebin_internal_entity.PasteResponse:
+    properties:
+      created_at:
+        type: string
+      expires_at:
+        type: string
+      format:
+        type: string
+      hash:
+        type: string
+      title:
         type: string
     type: object
 host: localhost:8080
@@ -53,6 +76,13 @@ paths:
           description: OK
           schema:
             properties:
+              data:
+                properties:
+                  paste:
+                    $ref: '#/definitions/github_com_romankravchuk_pastebin_internal_entity.PasteResponse'
+                  url:
+                    type: string
+                type: object
               message:
                 type: string
             type: object

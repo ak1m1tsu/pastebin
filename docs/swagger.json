@@ -38,6 +38,17 @@
                         "schema": {
                             "type": "object",
                             "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "properties": {
+                                        "paste": {
+                                            "$ref": "#/definitions/github_com_romankravchuk_pastebin_internal_entity.PasteResponse"
+                                        },
+                                        "url": {
+                                            "type": "string"
+                                        }
+                                    }
+                                },
                                 "message": {
                                     "type": "string"
                                 }
@@ -171,10 +182,20 @@
         "Paste": {
             "description": "Тело запроса для создания пасты.",
             "type": "object",
+            "required": [
+                "format",
+                "text"
+            ],
             "properties": {
                 "expires": {
                     "description": "Время, через которое паста становится не доступной",
                     "type": "string",
+                    "enum": [
+                        "30m",
+                        "1h",
+                        "1w",
+                        "1mth"
+                    ],
                     "example": "30m"
                 },
                 "format": {
@@ -190,17 +211,39 @@
                 "name": {
                     "description": "Название",
                     "type": "string",
+                    "maxLength": 255,
                     "example": "thie is paste"
                 },
                 "password": {
                     "description": "Пароль для получения доступа к пасте",
                     "type": "string",
+                    "maxLength": 255,
                     "example": "hello"
                 },
                 "text": {
                     "description": "Текст пасты",
                     "type": "string",
                     "example": "this is my paste"
+                }
+            }
+        },
+        "github_com_romankravchuk_pastebin_internal_entity.PasteResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "expires_at": {
+                    "type": "string"
+                },
+                "format": {
+                    "type": "string"
+                },
+                "hash": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
                 }
             }
         }

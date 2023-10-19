@@ -15,7 +15,10 @@ import (
 )
 
 func Run(cfg *config.Config) {
-	l := log.New(os.Stdout, log.Stol(cfg.Log.Level))
+	var (
+		err error
+		l   = log.New(os.Stdout, log.Stol(cfg.Log.Level))
+	)
 
 	// HTTP Server
 	handler := chi.NewMux()
@@ -26,8 +29,14 @@ func Run(cfg *config.Config) {
 		response.MethodNotAllowed(w, r)
 	})
 	handler.Route("/api/v1", func(r chi.Router) {
-		v1.NewRouter(r, l)
+		err = v1.NewRouter(r, cfg, l)
 	})
+
+	if err != nil {
+		l.Error("initialize the router", err, nil)
+
+		return
+	}
 
 	srv := httpserver.New(handler, httpserver.Port(cfg.HTTP.Port))
 
@@ -47,12 +56,12 @@ func Run(cfg *config.Config) {
 			Key:   "signal",
 			Value: s.String(),
 		}})
-	case err := <-srv.Notify():
+	case err = <-srv.Notify():
 		l.Error("catch listen and serve notification", err, nil)
 	}
 
 	// Shutdown
-	err := srv.Shutdown()
+	err = srv.Shutdown()
 	if err != nil {
 		l.Error("shutdown the service", err, nil)
 	}

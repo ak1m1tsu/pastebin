@@ -21,7 +21,7 @@ func NewPastes(r PastesRepo, c PastesCache) *PastesUseCase {
 	}
 }
 
-// Create implements Pastes.
+// Create creates a new paste.
 func (uc *PastesUseCase) Create(ctx context.Context, p *entity.Paste) error {
 	err := uc.repo.Create(ctx, p)
 	if err != nil {

@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/ilyakaznacheev/cleanenv"
 )
@@ -14,6 +15,7 @@ type (
 		Postgres `yaml:"postgres"`
 		Redis    `yaml:"redis"`
 		OAuth    `yaml:"oauth"`
+		Minio    `yaml:"minio"`
 	}
 
 	App struct {
@@ -35,6 +37,13 @@ type (
 
 	Redis struct {
 		DSN string `yaml:"dsn" env:"REDIS_DSN"`
+	}
+
+	Minio struct {
+		DSN           string        `yaml:"dsn" env:"MINIO_DSN"`
+		AccessKey     string        `yaml:"access_key" env:"MINIO_ACCESS_KEY"`
+		SecretKey     string        `yaml:"secret_key" env:"MINIO_SECRET_KEY"`
+		ActionTimeout time.Duration `yaml:"action_timeout" env:"MINIO_ACTION_TIMEOUT"`
 	}
 
 	OAuth struct {

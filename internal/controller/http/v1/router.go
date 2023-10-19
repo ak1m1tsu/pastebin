@@ -3,14 +3,19 @@ package v1
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/romankravchuk/pastebin/config"
 	"github.com/romankravchuk/pastebin/internal/controller/http/v1/auth"
 	"github.com/romankravchuk/pastebin/internal/controller/http/v1/paste"
 	"github.com/romankravchuk/pastebin/internal/usecase"
+	"github.com/romankravchuk/pastebin/internal/usecase/repo"
 	"github.com/romankravchuk/pastebin/pkg/log"
+	"github.com/romankravchuk/pastebin/pkg/minio"
+	"github.com/romankravchuk/pastebin/pkg/postgres"
 	swagger "github.com/swaggo/http-swagger/v2"
 
 	_ "github.com/romankravchuk/pastebin/docs" //
@@ -29,10 +34,21 @@ import (
 //	@securitydefinitions.apiKey	Bearer
 //	@in							header
 //	@name						Authorization
-func NewRouter(mux chi.Router, l *log.Logger) {
+func NewRouter(mux chi.Router, cfg *config.Config, l *log.Logger) error {
+	pg, err := postgres.New(cfg.Postgres.DSN)
+	if err != nil {
+		return err
+	}
+
+	m, err := minio.New(cfg.Minio.DSN, cfg.Minio.AccessKey, cfg.Minio.SecretKey, 10*time.Second)
+	if err != nil {
+		return err
+	}
+
 	var (
-		auc = usecase.NewAuth(nil)
-		puc = usecase.NewPastes(nil, nil)
+		prepo = repo.NewPastesRepo(pg, m)
+		auc   = usecase.NewAuth(nil)
+		puc   = usecase.NewPastes(prepo, nil)
 	)
 
 	mux.Get("/swagger/*", swagger.Handler())
@@ -44,4 +60,6 @@ func NewRouter(mux chi.Router, l *log.Logger) {
 	auth.New(mux, auc, l)
 
 	paste.New(mux, puc, l)
+
+	return nil
 }

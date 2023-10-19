@@ -1,27 +1,30 @@
 package repo
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 
 	"github.com/romankravchuk/pastebin/internal/entity"
 	"github.com/romankravchuk/pastebin/internal/usecase"
+	"github.com/romankravchuk/pastebin/pkg/minio"
 	"github.com/romankravchuk/pastebin/pkg/postgres"
 )
 
 var _ usecase.PastesRepo = &PastesRepo{}
 
 type PastesRepo struct {
-	*postgres.Postgres
+	m  *minio.Minio
+	pg *postgres.Postgres
 }
 
-func New(pg *postgres.Postgres) *PastesRepo {
-	return &PastesRepo{pg}
+func NewPastesRepo(pg *postgres.Postgres, m *minio.Minio) *PastesRepo {
+	return &PastesRepo{pg: pg, m: m}
 }
 
 // DeletePaste implements usecase.PastesRepo.
 func (r *PastesRepo) Delete(ctx context.Context, hash string) error {
-	sql, args, err := r.Builder.
+	sql, args, err := r.pg.Builder.
 		Delete("pastes").
 		Where("hash = $1", hash).
 		ToSql()
@@ -29,7 +32,7 @@ func (r *PastesRepo) Delete(ctx context.Context, hash string) error {
 		return fmt.Errorf("PastesRepo.DeletePaste.Builder: %w", err)
 	}
 
-	_, err = r.Pool.Exec(ctx, sql, args...)
+	_, err = r.pg.Pool.Exec(ctx, sql, args...)
 	if err != nil {
 		return fmt.Errorf("PastesRepo.DeletePaste.Pool.Exec: %w", err)
 	}
@@ -39,8 +42,8 @@ func (r *PastesRepo) Delete(ctx context.Context, hash string) error {
 
 // GetPaste implements usecase.PastesRepo.
 func (r *PastesRepo) Get(ctx context.Context, hash string) (*entity.Paste, error) {
-	sql, args, err := r.Builder.
-		Select("hash, user_id, name, format, url, password_hash, created_at, expires_at").
+	sql, args, err := r.pg.Builder.
+		Select("hash, user_id, name, format, password_hash, created_at, expires_at").
 		From("pastes").
 		Where("hash = $1", hash).
 		ToSql()
@@ -50,13 +53,12 @@ func (r *PastesRepo) Get(ctx context.Context, hash string) (*entity.Paste, error
 
 	paste := new(entity.Paste)
 
-	err = r.Pool.QueryRow(ctx, sql, args...).
+	err = r.pg.Pool.QueryRow(ctx, sql, args...).
 		Scan(
 			&paste.Hash,
 			&paste.UserID,
 			&paste.Name,
 			&paste.Format,
-			&paste.URL,
 			&paste.Password,
 			&paste.CreatedAt,
 			&paste.ExpiresAt,
@@ -68,20 +70,70 @@ func (r *PastesRepo) Get(ctx context.Context, hash string) (*entity.Paste, error
 	return paste, nil
 }
 
-// Store implements usecase.PastesRepo.
+// Create inserts a paste metadata in database and upload paste text in blob storage.
 func (r *PastesRepo) Create(ctx context.Context, p *entity.Paste) error {
-	sql, args, err := r.Builder.
-		Insert("pastes").
-		Columns("hash", "user_id", "name", "format", "url", "password_hash", "expires_at").
-		Values(p.Hash, p.UserID, p.Name, p.Format, p.URL, p.Password, p.ExpiresAt).
-		ToSql()
-	if err != nil {
-		return fmt.Errorf("PastesRepo.Store.Builder: %w", err)
+	var (
+		columns = []string{"hash", "format"}
+		values  = []any{p.Hash, p.Format}
+		query   = r.pg.Builder.Insert("pastes")
+	)
+
+	if p.Name != "" {
+		columns = append(columns, "name")
+		values = append(values, p.Name)
 	}
 
-	_, err = r.Pool.Exec(ctx, sql, args...)
+	if p.UserID != "" {
+		columns = append(columns, "user_id")
+		values = append(values, p.UserID)
+	}
 
-	return err
+	hash := p.Password.Hash()
+	if hash != nil {
+		columns = append(columns, "password_hash")
+		values = append(values, hash)
+	}
+
+	if !p.ExpiresAt.IsZero() {
+		columns = append(columns, "expires_at")
+		values = append(values, p.ExpiresAt)
+	}
+
+	sql, args, err := query.
+		Columns(columns...).
+		Values(values...).
+		Suffix("RETURNING created_at").
+		ToSql()
+	if err != nil {
+		return fmt.Errorf("PastesRepo.CreatePaste.Builder: %w", err)
+	}
+
+	tx, err := r.pg.Pool.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("PastesRepo.CreatePaste.Pool.Begin: %w", err)
+	}
+
+	defer tx.Rollback(ctx) //nolint:errcheck // skip errors for rollback - OK
+
+	err = tx.QueryRow(ctx, sql, args...).Scan(&p.CreatedAt)
+	if err != nil {
+		return fmt.Errorf("PastesRepo.CreatePaste.Pool.QueryRow: %w", err)
+	}
+
+	if p.UserID == "" {
+		p.UserID = "public"
+	}
+
+	err = r.m.UploadObject(ctx, p.UserID, p.Hash, p.File.Size(), bytes.NewReader(p.File))
+	if err != nil {
+		return fmt.Errorf("PastesRepo.CreatePaste.UploadObject: %w", err)
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return fmt.Errorf("PastesRepo.CreatePaste.Pool.Commit: %w", err)
+	}
+
+	return nil
 }
 
 // UpdatePaste implements usecase.PastesRepo.
