@@ -15,6 +15,17 @@ networks:
     driver: bridge
 
 services:
+  web:
+    build:
+      context: web
+    container_name: web
+    ports:
+      - "80:80"
+    depends_on:
+      - nginx
+    networks:
+      - pastebinnet
+
   nginx:
     image: nginx:alpine
     container_name: loadbalancer
@@ -24,7 +35,7 @@ services:
         target: /etc/nginx/conf.d/default.conf
         read_only: true
     ports:
-      - "80:80"
+      - "8085:80"
     depends_on:
       - app
       - app2
@@ -41,6 +52,7 @@ services:
     environment:
       PG_DSN: ${PG_DSN}
       REDIS_DSN: ${REDIS_DSN}
+      MINIO_DSN: ${MINIO_DSN}
       PORT: ${EXPOSE_PORT}
     ports:
       - ${PORT}:${EXPOSE_PORT}
@@ -60,6 +72,7 @@ services:
     environment:
       PG_DSN: ${PG_DSN}
       REDIS_DSN: ${REDIS_DSN}
+      MINIO_DSN: ${MINIO_DSN}
       PORT: ${PORT}
     ports:
       - ${EXPOSE_PORT}:${PORT}
@@ -145,8 +158,8 @@ services:
     container_name: minio
     restart: always
     environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY}
     ports:
       - "9000:9000"
       - "8001:8001"
