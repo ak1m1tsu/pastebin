@@ -34,7 +34,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/Paste"
+                            "$ref": "#/definitions/CreatePasteBody"
                         }
                     }
                 ],
@@ -48,7 +48,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "paste": {
-                                            "$ref": "#/definitions/github_com_romankravchuk_pastebin_internal_entity.PasteResponse"
+                                            "$ref": "#/definitions/PasteResponse"
                                         },
                                         "url": {
                                             "type": "string"
@@ -83,6 +83,12 @@ const docTemplate = `{
                         "name": "hash",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Пароль",
+                        "name": "passwd",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -185,7 +191,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "Paste": {
+        "CreatePasteBody": {
             "description": "Тело запроса для создания пасты.",
             "type": "object",
             "required": [
@@ -227,28 +233,34 @@ const docTemplate = `{
                     "example": "hello"
                 },
                 "text": {
-                    "description": "Текст пасты",
+                    "description": "Текст",
                     "type": "string",
                     "example": "this is my paste"
                 }
             }
         },
-        "github_com_romankravchuk_pastebin_internal_entity.PasteResponse": {
+        "PasteResponse": {
+            "description": "Тело ответа на создание пасты.",
             "type": "object",
             "properties": {
                 "created_at": {
+                    "description": "Дата создания",
                     "type": "string"
                 },
                 "expires_at": {
+                    "description": "Время, через которое паста становится не доступной",
                     "type": "string"
                 },
                 "format": {
+                    "description": "Формат текста",
                     "type": "string"
                 },
                 "hash": {
+                    "description": "Уникальный идентификатор",
                     "type": "string"
                 },
                 "title": {
+                    "description": "Название",
                     "type": "string"
                 }
             }

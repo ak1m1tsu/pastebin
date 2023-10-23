@@ -3,7 +3,6 @@ package v1
 
 import (
 	"net/http"
-	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
@@ -12,10 +11,13 @@ import (
 	"github.com/romankravchuk/pastebin/internal/controller/http/v1/auth"
 	"github.com/romankravchuk/pastebin/internal/controller/http/v1/paste"
 	"github.com/romankravchuk/pastebin/internal/usecase"
+	"github.com/romankravchuk/pastebin/internal/usecase/blob"
+	"github.com/romankravchuk/pastebin/internal/usecase/cache"
 	"github.com/romankravchuk/pastebin/internal/usecase/repo"
 	"github.com/romankravchuk/pastebin/pkg/log"
 	"github.com/romankravchuk/pastebin/pkg/minio"
 	"github.com/romankravchuk/pastebin/pkg/postgres"
+	"github.com/romankravchuk/pastebin/pkg/redis"
 	swagger "github.com/swaggo/http-swagger/v2"
 
 	_ "github.com/romankravchuk/pastebin/docs" //
@@ -40,15 +42,22 @@ func NewRouter(mux chi.Router, cfg *config.Config, l *log.Logger) error {
 		return err
 	}
 
-	m, err := minio.New(cfg.Minio.DSN, cfg.Minio.AccessKey, cfg.Minio.SecretKey, 10*time.Second)
+	m, err := minio.New(cfg.Minio.DSN, cfg.Minio.AccessKey, cfg.Minio.SecretKey)
+	if err != nil {
+		return err
+	}
+
+	rd, err := redis.New(cfg.Redis.DSN)
 	if err != nil {
 		return err
 	}
 
 	var (
-		prepo = repo.NewPastesRepo(pg, m)
-		auc   = usecase.NewAuth(nil)
-		puc   = usecase.NewPastes(prepo, nil)
+		pcache = cache.NewPastesCache(rd)
+		pblob  = blob.New(m)
+		prepo  = repo.NewPastesRepo(pg)
+		auc    = usecase.NewAuth(nil)
+		puc    = usecase.NewPastes(prepo, pblob, pcache)
 	)
 
 	mux.Get("/swagger/*", swagger.Handler())

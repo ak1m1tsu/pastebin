@@ -5,6 +5,7 @@ package mocks
 import (
 	context "context"
 
+	entity "github.com/romankravchuk/pastebin/internal/entity"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -13,13 +14,13 @@ type PastesBlobStorage struct {
 	mock.Mock
 }
 
-// Create provides a mock function with given fields: ctx, bucket, id, data
-func (_m *PastesBlobStorage) Create(ctx context.Context, bucket string, id string, data []byte) error {
-	ret := _m.Called(ctx, bucket, id, data)
+// Create provides a mock function with given fields: ctx, p
+func (_m *PastesBlobStorage) Create(ctx context.Context, p *entity.Paste) error {
+	ret := _m.Called(ctx, p)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, []byte) error); ok {
-		r0 = rf(ctx, bucket, id, data)
+	if rf, ok := ret.Get(0).(func(context.Context, *entity.Paste) error); ok {
+		r0 = rf(ctx, p)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -27,13 +28,13 @@ func (_m *PastesBlobStorage) Create(ctx context.Context, bucket string, id strin
 	return r0
 }
 
-// Delete provides a mock function with given fields: ctx, id
-func (_m *PastesBlobStorage) Delete(ctx context.Context, id string) error {
-	ret := _m.Called(ctx, id)
+// Delete provides a mock function with given fields: ctx, hash
+func (_m *PastesBlobStorage) Delete(ctx context.Context, hash string) error {
+	ret := _m.Called(ctx, hash)
 
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, string) error); ok {
-		r0 = rf(ctx, id)
+		r0 = rf(ctx, hash)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -41,25 +42,25 @@ func (_m *PastesBlobStorage) Delete(ctx context.Context, id string) error {
 	return r0
 }
 
-// Get provides a mock function with given fields: ctx, id
-func (_m *PastesBlobStorage) Get(ctx context.Context, id string) ([]byte, error) {
-	ret := _m.Called(ctx, id)
+// Get provides a mock function with given fields: ctx, userID, hash
+func (_m *PastesBlobStorage) Get(ctx context.Context, userID string, hash string) (entity.File, error) {
+	ret := _m.Called(ctx, userID, hash)
 
-	var r0 []byte
+	var r0 entity.File
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) ([]byte, error)); ok {
-		return rf(ctx, id)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) (entity.File, error)); ok {
+		return rf(ctx, userID, hash)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string) []byte); ok {
-		r0 = rf(ctx, id)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) entity.File); ok {
+		r0 = rf(ctx, userID, hash)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]byte)
+			r0 = ret.Get(0).(entity.File)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
-		r1 = rf(ctx, id)
+	if rf, ok := ret.Get(1).(func(context.Context, string, string) error); ok {
+		r1 = rf(ctx, userID, hash)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -67,13 +68,13 @@ func (_m *PastesBlobStorage) Get(ctx context.Context, id string) ([]byte, error)
 	return r0, r1
 }
 
-// Update provides a mock function with given fields: ctx, id, data
-func (_m *PastesBlobStorage) Update(ctx context.Context, id string, data []byte) error {
-	ret := _m.Called(ctx, id, data)
+// Update provides a mock function with given fields: ctx, p
+func (_m *PastesBlobStorage) Update(ctx context.Context, p *entity.Paste) error {
+	ret := _m.Called(ctx, p)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, []byte) error); ok {
-		r0 = rf(ctx, id, data)
+	if rf, ok := ret.Get(0).(func(context.Context, *entity.Paste) error); ok {
+		r0 = rf(ctx, p)
 	} else {
 		r0 = ret.Error(0)
 	}

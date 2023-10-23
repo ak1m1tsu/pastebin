@@ -107,7 +107,7 @@ func (h *handler) HandleCreatePaste(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	location := fmt.Sprintf("%s/%s", r.URL.Path, e.Hash)
+	location := fmt.Sprintf("%s/%s", r.URL.String(), e.Hash)
 
 	w.Header().Add("Location", location)
 	response.OK(w, r, render.M{
@@ -126,12 +126,45 @@ func (h *handler) HandleCreatePaste(w http.ResponseWriter, r *http.Request) {
 //	@accept		json
 //	@produce	json
 //	@param		hash	path		string	true	"Хеш пасты"
+//	@param		passwd	query		string	false	"Пароль"
 //	@success	200		{object}	any{message=string}
 //	@failure	400		{object}	any{error=string}
 //	@router		/pastes/{hash} [get]
 func (h *handler) HandleGetPasteByHash(w http.ResponseWriter, r *http.Request) {
+	var (
+		hash        = chi.URLParam(r, "hash")
+		passwd      = r.URL.Query().Get("passwd")
+		ctx, cancel = context.WithTimeout(r.Context(), h.tm)
+	)
+
+	defer cancel()
+
+	paste, err := h.uc.Get(ctx, hash)
+	if err != nil {
+		h.l.Error("failed to get paste by hash", err, log.FF{{Key: "Hash", Value: hash}})
+
+		response.InternalServerError(w, r)
+
+		return
+	}
+
+	if !paste.Password.Matches(passwd) {
+		h.l.Info("unable to get proceted paste, invalid password", log.FF{
+			{Key: "Hash", Value: hash},
+			{Key: "Password", Value: passwd},
+			{Key: "Paste", Value: paste},
+		})
+
+		response.Forbidden(w, r)
+
+		return
+	}
+
 	response.OK(w, r, render.M{
 		"message": "ok",
+		"data": render.M{
+			"paste": converter.ModelToResponse(paste),
+		},
 	})
 }
 

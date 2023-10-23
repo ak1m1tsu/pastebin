@@ -16,7 +16,7 @@ func NewUsersRepo(pg *postgres.Postgres) *UsersRepo {
 	return &UsersRepo{pg}
 }
 
-func (r *UsersRepo) Create(ctx context.Context, u *entity.User) error {
+func (r *UsersRepo) Create(_ context.Context, u *entity.User) error {
 	_, _, err := r.Builder.
 		Insert("users").
 		Columns("username", "email", "avatar", "access_token").

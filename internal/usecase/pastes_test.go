@@ -12,15 +12,16 @@ import (
 
 var errTest = errors.New("test error")
 
-func newPastesUseCase(t *testing.T) (*PastesUseCase, *mocks.PastesRepo, *mocks.PastesCache) {
+func newPastesUseCase(t *testing.T) (*PastesUseCase, *mocks.PastesRepo, *mocks.PastesBlobStorage, *mocks.PastesCache) {
 	t.Helper()
 
 	var (
 		repo  = mocks.NewPastesRepo(t)
 		cache = mocks.NewPastesCache(t)
+		blob  = mocks.NewPastesBlobStorage(t)
 	)
 
-	return NewPastes(repo, cache), repo, cache
+	return NewPastes(repo, blob, cache), repo, blob, cache
 }
 
 func TestPastesUseCase_Create(t *testing.T) {
@@ -30,14 +31,17 @@ func TestPastesUseCase_Create(t *testing.T) {
 		t.Parallel()
 
 		var (
-			uc, repo, _ = newPastesUseCase(t)
-			ctx         = context.Background()
-			paste       = &entity.Paste{
+			uc, repo, blob, _ = newPastesUseCase(t)
+			ctx               = context.Background()
+			paste             = &entity.Paste{
 				Hash: "test",
 				File: []byte("test"),
 			}
 		)
 
+		blob.On("Create", ctx, paste).
+			Once().
+			Return(nil)
 		repo.On("Create", ctx, paste).
 			Once().
 			Return(nil)
@@ -49,21 +53,48 @@ func TestPastesUseCase_Create(t *testing.T) {
 	t.Run("Get error", func(t *testing.T) {
 		t.Parallel()
 
-		var (
-			uc, repo, _ = newPastesUseCase(t)
-			ctx         = context.Background()
-			paste       = &entity.Paste{
-				Hash: "test",
-				File: []byte("test"),
-			}
-		)
+		t.Run("Error on blob", func(t *testing.T) {
+			t.Parallel()
 
-		repo.On("Create", ctx, paste).
-			Once().
-			Return(errTest)
+			var (
+				uc, _, blob, _ = newPastesUseCase(t)
+				ctx            = context.Background()
+				paste          = &entity.Paste{
+					Hash: "test",
+					File: []byte("test"),
+				}
+			)
 
-		createErr := uc.Create(ctx, paste)
-		require.Error(t, createErr)
+			blob.On("Create", ctx, paste).
+				Once().
+				Return(errTest)
+
+			err := uc.Create(ctx, paste)
+			require.Error(t, err)
+		})
+
+		t.Run("Error on repo", func(t *testing.T) {
+			t.Parallel()
+
+			var (
+				uc, repo, blob, _ = newPastesUseCase(t)
+				ctx               = context.Background()
+				paste             = &entity.Paste{
+					Hash: "test",
+					File: []byte("test"),
+				}
+			)
+
+			blob.On("Create", ctx, paste).
+				Once().
+				Return(nil)
+			repo.On("Create", ctx, paste).
+				Once().
+				Return(errTest)
+
+			createErr := uc.Create(ctx, paste)
+			require.Error(t, createErr)
+		})
 	})
 }
 
@@ -74,9 +105,9 @@ func TestPastesUseCase_Delete(t *testing.T) {
 		t.Parallel()
 
 		var (
-			uc, repo, _ = newPastesUseCase(t)
-			ctx         = context.Background()
-			id          = "test"
+			uc, repo, _, _ = newPastesUseCase(t)
+			ctx            = context.Background()
+			id             = "test"
 		)
 
 		repo.On("Delete", ctx, id).
@@ -95,9 +126,9 @@ func TestPastesUseCase_Get(t *testing.T) {
 		t.Parallel()
 
 		var (
-			uc, _, cache = newPastesUseCase(t)
-			ctx          = context.Background()
-			expPaste     = &entity.Paste{
+			uc, _, _, cache = newPastesUseCase(t)
+			ctx             = context.Background()
+			expPaste        = &entity.Paste{
 				Hash: "test",
 				File: []byte("test"),
 			}
@@ -116,9 +147,9 @@ func TestPastesUseCase_Get(t *testing.T) {
 		t.Parallel()
 
 		var (
-			uc, repo, cache = newPastesUseCase(t)
-			ctx             = context.Background()
-			expPaste        = &entity.Paste{
+			uc, repo, _, cache = newPastesUseCase(t)
+			ctx                = context.Background()
+			expPaste           = &entity.Paste{
 				Hash: "test",
 				File: []byte("test"),
 			}
@@ -140,9 +171,9 @@ func TestPastesUseCase_Get(t *testing.T) {
 		t.Parallel()
 
 		var (
-			uc, _, cache = newPastesUseCase(t)
-			ctx          = context.Background()
-			id           = "test"
+			uc, _, _, cache = newPastesUseCase(t)
+			ctx             = context.Background()
+			id              = "test"
 		)
 
 		cache.On("Get", ctx, id).
@@ -158,9 +189,9 @@ func TestPastesUseCase_Get(t *testing.T) {
 		t.Parallel()
 
 		var (
-			uc, repo, cache = newPastesUseCase(t)
-			ctx             = context.Background()
-			id              = "test"
+			uc, repo, _, cache = newPastesUseCase(t)
+			ctx                = context.Background()
+			id                 = "test"
 		)
 
 		cache.On("Get", ctx, id).
@@ -183,9 +214,9 @@ func TestPastesUseCase_Update(t *testing.T) {
 		t.Parallel()
 
 		var (
-			uc, repo, _ = newPastesUseCase(t)
-			ctx         = context.Background()
-			paste       = &entity.Paste{
+			uc, repo, _, _ = newPastesUseCase(t)
+			ctx            = context.Background()
+			paste          = &entity.Paste{
 				Hash: "test",
 				File: []byte("test"),
 			}
@@ -203,9 +234,9 @@ func TestPastesUseCase_Update(t *testing.T) {
 		t.Parallel()
 
 		var (
-			uc, repo, _ = newPastesUseCase(t)
-			ctx         = context.Background()
-			paste       = &entity.Paste{
+			uc, repo, _, _ = newPastesUseCase(t)
+			ctx            = context.Background()
+			paste          = &entity.Paste{
 				Hash: "test",
 				File: []byte("test"),
 			}

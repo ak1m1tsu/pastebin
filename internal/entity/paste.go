@@ -1,8 +1,8 @@
 package entity
 
 import (
-	"bytes"
 	"crypto/sha256"
+	"encoding/json"
 	"errors"
 	"time"
 )
@@ -16,31 +16,31 @@ type Paste struct {
 	Format    string    `db:"format"`
 	CreatedAt time.Time `db:"created_at"`
 	ExpiresAt time.Time `db:"expires_at"`
-	Password  password  `db:"password"`
-	File      File      `db:"file"`
+	File      File
+	Password  Password
 }
 
-type password struct {
-	plaintext string `db:"-"`
-	hash      []byte `db:"password"`
+func (p *Paste) UnmarshalBinary(raw []byte) error {
+	return json.Unmarshal(raw, &p)
 }
 
-func (p *password) Set(pwd string) {
+func (p *Paste) MarshalBinary() ([]byte, error) {
+	return json.Marshal(p)
+}
+
+type Password struct {
+	Plaintext string `db:"-"`
+	Hash      []byte `db:"password_hash"`
+}
+
+func (p *Password) Set(pwd string) {
 	passhash := sha256.Sum256([]byte(pwd))
-	p.plaintext = pwd
-	p.hash = passhash[:]
+	p.Plaintext = pwd
+	p.Hash = passhash[:]
 }
 
-func (p password) Matches(pwd string) bool {
-	return [32]byte(p.hash) == sha256.Sum256([]byte(pwd))
-}
-
-func (p password) String() string {
-	return p.plaintext
-}
-
-func (p password) Hash() []byte {
-	return bytes.Clone(p.hash)
+func (p Password) Matches(pwd string) bool {
+	return [32]byte(p.Hash) == sha256.Sum256([]byte(pwd))
 }
 
 type File []byte
@@ -51,7 +51,7 @@ func (f File) Size() int64 {
 
 // @description Тело запроса для создания пасты.
 type CreatePasteBody struct {
-	// Текст пасты
+	// Текст
 	Text string `json:"text" example:"this is my paste" validate:"required"`
 	// Формат текста
 	Format string `json:"format" example:"json" enums:"json,yaml,toml" validate:"required,oneof=json plaintext toml yaml xml"`
@@ -61,12 +61,18 @@ type CreatePasteBody struct {
 	Password string `json:"password" example:"hello" validate:"omitempty,max=255"`
 	// Название
 	Name string `json:"name" example:"thie is paste" validate:"omitempty,max=255"`
-} // @name Paste
+} // @name CreatePasteBody
 
+// @description Тело ответа на создание пасты.
 type PasteResponse struct {
-	Hash      string `json:"hash"`
-	Title     string `json:"title"`
-	Format    string `json:"format"`
+	// Уникальный идентификатор
+	Hash string `json:"hash"`
+	// Название
+	Title string `json:"title,omitempty"`
+	// Формат текста
+	Format string `json:"format"`
+	// Дата создания
 	CreatedAt string `json:"created_at"`
+	// Время, через которое паста становится не доступной
 	ExpiresAt string `json:"expires_at"`
-}
+} // @name PasteResponse

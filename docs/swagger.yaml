@@ -1,6 +1,6 @@
 basePath: /api/v1
 definitions:
-  Paste:
+  CreatePasteBody:
     description: Тело запроса для создания пасты.
     properties:
       expires:
@@ -31,24 +31,30 @@ definitions:
         maxLength: 255
         type: string
       text:
-        description: Текст пасты
+        description: Текст
         example: this is my paste
         type: string
     required:
     - format
     - text
     type: object
-  github_com_romankravchuk_pastebin_internal_entity.PasteResponse:
+  PasteResponse:
+    description: Тело ответа на создание пасты.
     properties:
       created_at:
+        description: Дата создания
         type: string
       expires_at:
+        description: Время, через которое паста становится не доступной
         type: string
       format:
+        description: Формат текста
         type: string
       hash:
+        description: Уникальный идентификатор
         type: string
       title:
+        description: Название
         type: string
     type: object
 host: localhost:8080
@@ -68,7 +74,7 @@ paths:
         name: paste
         required: true
         schema:
-          $ref: '#/definitions/Paste'
+          $ref: '#/definitions/CreatePasteBody'
       produces:
       - application/json
       responses:
@@ -79,7 +85,7 @@ paths:
               data:
                 properties:
                   paste:
-                    $ref: '#/definitions/github_com_romankravchuk_pastebin_internal_entity.PasteResponse'
+                    $ref: '#/definitions/PasteResponse'
                   url:
                     type: string
                 type: object
@@ -122,6 +128,10 @@ paths:
         in: path
         name: hash
         required: true
+        type: string
+      - description: Пароль
+        in: query
+        name: passwd
         type: string
       produces:
       - application/json

@@ -1,25 +1,22 @@
 package repo
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 
 	"github.com/romankravchuk/pastebin/internal/entity"
 	"github.com/romankravchuk/pastebin/internal/usecase"
-	"github.com/romankravchuk/pastebin/pkg/minio"
 	"github.com/romankravchuk/pastebin/pkg/postgres"
 )
 
 var _ usecase.PastesRepo = &PastesRepo{}
 
 type PastesRepo struct {
-	m  *minio.Minio
 	pg *postgres.Postgres
 }
 
-func NewPastesRepo(pg *postgres.Postgres, m *minio.Minio) *PastesRepo {
-	return &PastesRepo{pg: pg, m: m}
+func NewPastesRepo(pg *postgres.Postgres) *PastesRepo {
+	return &PastesRepo{pg: pg}
 }
 
 // DeletePaste implements usecase.PastesRepo.
@@ -42,24 +39,32 @@ func (r *PastesRepo) Delete(ctx context.Context, hash string) error {
 
 // GetPaste implements usecase.PastesRepo.
 func (r *PastesRepo) Get(ctx context.Context, hash string) (*entity.Paste, error) {
-	sql, args, err := r.pg.Builder.
-		Select("hash, user_id, name, format, password_hash, created_at, expires_at").
-		From("pastes").
-		Where("hash = $1", hash).
-		ToSql()
+	var (
+		columns = []string{
+			"hash",
+			"format",
+			"password_hash",
+			"expires_at",
+			"created_at",
+		}
+		query = r.pg.Builder.
+			Select(columns...).
+			From("pastes").
+			Where("hash = ?", hash)
+	)
+
+	sql, args, err := query.ToSql()
 	if err != nil {
 		return nil, fmt.Errorf("PastesRepo.GetPaste.Builder: %w", err)
 	}
 
-	paste := new(entity.Paste)
+	paste := entity.Paste{}
 
 	err = r.pg.Pool.QueryRow(ctx, sql, args...).
 		Scan(
 			&paste.Hash,
-			&paste.UserID,
-			&paste.Name,
 			&paste.Format,
-			&paste.Password,
+			&paste.Password.Hash,
 			&paste.CreatedAt,
 			&paste.ExpiresAt,
 		)
@@ -67,7 +72,7 @@ func (r *PastesRepo) Get(ctx context.Context, hash string) (*entity.Paste, error
 		return nil, fmt.Errorf("PastesRepo.GetPaste.Pool.QueryRow: %w", err)
 	}
 
-	return paste, nil
+	return &paste, nil
 }
 
 // Create inserts a paste metadata in database and upload paste text in blob storage.
@@ -88,10 +93,9 @@ func (r *PastesRepo) Create(ctx context.Context, p *entity.Paste) error {
 		values = append(values, p.UserID)
 	}
 
-	hash := p.Password.Hash()
-	if hash != nil {
+	if p.Password.Hash != nil {
 		columns = append(columns, "password_hash")
-		values = append(values, hash)
+		values = append(values, p.Password.Hash)
 	}
 
 	if !p.ExpiresAt.IsZero() {
@@ -108,29 +112,11 @@ func (r *PastesRepo) Create(ctx context.Context, p *entity.Paste) error {
 		return fmt.Errorf("PastesRepo.CreatePaste.Builder: %w", err)
 	}
 
-	tx, err := r.pg.Pool.Begin(ctx)
+	err = r.pg.Pool.
+		QueryRow(ctx, sql, args...).
+		Scan(&p.CreatedAt)
 	if err != nil {
 		return fmt.Errorf("PastesRepo.CreatePaste.Pool.Begin: %w", err)
-	}
-
-	defer tx.Rollback(ctx) //nolint:errcheck // skip errors for rollback - OK
-
-	err = tx.QueryRow(ctx, sql, args...).Scan(&p.CreatedAt)
-	if err != nil {
-		return fmt.Errorf("PastesRepo.CreatePaste.Pool.QueryRow: %w", err)
-	}
-
-	if p.UserID == "" {
-		p.UserID = "public"
-	}
-
-	err = r.m.UploadObject(ctx, p.UserID, p.Hash, p.File.Size(), bytes.NewReader(p.File))
-	if err != nil {
-		return fmt.Errorf("PastesRepo.CreatePaste.UploadObject: %w", err)
-	}
-
-	if err := tx.Commit(ctx); err != nil {
-		return fmt.Errorf("PastesRepo.CreatePaste.Pool.Commit: %w", err)
 	}
 
 	return nil

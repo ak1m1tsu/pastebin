@@ -48,7 +48,7 @@ func ModelToResponse(model *entity.Paste) *entity.PasteResponse {
 		Hash:      model.Hash,
 		Title:     model.Name,
 		Format:    model.Format,
-		ExpiresAt: model.ExpiresAt.String(),
-		CreatedAt: model.CreatedAt.String(),
+		ExpiresAt: model.ExpiresAt.Format(time.RFC1123),
+		CreatedAt: model.CreatedAt.Format(time.RFC1123),
 	}
 }

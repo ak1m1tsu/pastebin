@@ -25,10 +25,10 @@ type PastesRepo interface {
 
 //go:generate go run github.com/vektra/mockery/v2@v2.20.2 --name PastesBlobStorage --output ./mocks --outpkg mocks
 type PastesBlobStorage interface {
-	Create(ctx context.Context, bucket, id string, data []byte) error
-	Get(ctx context.Context, id string) ([]byte, error)
-	Delete(ctx context.Context, id string) error
-	Update(ctx context.Context, id string, data []byte) error
+	Create(ctx context.Context, p *entity.Paste) error
+	Get(ctx context.Context, userID, hash string) (entity.File, error)
+	Delete(ctx context.Context, hash string) error
+	Update(ctx context.Context, p *entity.Paste) error
 }
 
 //go:generate go run github.com/vektra/mockery/v2@v2.20.2 --name PastesCache --output ./mocks --outpkg mocks
