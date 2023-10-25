@@ -8,7 +8,7 @@ import (
 
 const (
 	fiedsKey       = "data"
-	skipFrameCount = 3
+	skipFrameCount = 1
 )
 
 type Level int

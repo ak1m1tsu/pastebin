@@ -29,9 +29,9 @@ func New(m *minio.Minio) *PastesBlobStorage {
 // Hash is used as object name, user id is used as bucket name.
 // If user id is empty, it will be set to public.
 func (bs *PastesBlobStorage) Create(ctx context.Context, p *entity.Paste) error {
-	bucket := p.UserID
-	if bucket == "" {
-		bucket = public
+	bucket := public
+	if p.UserID.Valid {
+		bucket = p.UserID.String
 	}
 
 	reader := bytes.NewReader(p.File)

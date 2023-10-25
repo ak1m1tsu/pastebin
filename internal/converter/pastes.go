@@ -26,10 +26,10 @@ func generateHash(text string) string {
 	return string(b)
 }
 
-func CreatePasteToEntity(body *entity.CreatePasteBody) *entity.Paste {
+func CreatePasteToEntity(body *entity.CreatePasteBody) (*entity.Paste, error) {
 	p := &entity.Paste{
 		Hash:      generateHash(body.Text),
-		Name:      body.Name,
+		Title:     body.Title,
 		Format:    body.Format,
 		ExpiresAt: time.Now().Add(2 * 365 * 24 * time.Hour),
 		File:      entity.File(body.Text),
@@ -37,16 +37,20 @@ func CreatePasteToEntity(body *entity.CreatePasteBody) *entity.Paste {
 	p.Password.Set(body.Password)
 
 	if body.Expires != "" {
-		p.ExpiresAt, _ = time.Parse(time.RFC3339, body.Expires) //nolint:errcheck // should always provide valid time
+		d, err := time.ParseDuration(body.Expires)
+		if err != nil {
+			return nil, err
+		}
+		p.ExpiresAt = time.Now().Add(d)
 	}
 
-	return p
+	return p, nil
 }
 
 func ModelToResponse(model *entity.Paste) *entity.PasteResponse {
 	return &entity.PasteResponse{
 		Hash:      model.Hash,
-		Title:     model.Name,
+		Title:     model.Title,
 		Format:    model.Format,
 		ExpiresAt: model.ExpiresAt.Format(time.RFC1123),
 		CreatedAt: model.CreatedAt.Format(time.RFC1123),

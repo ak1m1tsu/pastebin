@@ -2,8 +2,10 @@ package repo
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
+	"github.com/jackc/pgx/v4"
 	"github.com/romankravchuk/pastebin/internal/entity"
 	"github.com/romankravchuk/pastebin/internal/usecase"
 	"github.com/romankravchuk/pastebin/pkg/postgres"
@@ -42,6 +44,8 @@ func (r *PastesRepo) Get(ctx context.Context, hash string) (*entity.Paste, error
 	var (
 		columns = []string{
 			"hash",
+			"user_id",
+			"title",
 			"format",
 			"password_hash",
 			"expires_at",
@@ -53,22 +57,28 @@ func (r *PastesRepo) Get(ctx context.Context, hash string) (*entity.Paste, error
 			Where("hash = ?", hash)
 	)
 
-	sql, args, err := query.ToSql()
+	s, args, err := query.ToSql()
 	if err != nil {
 		return nil, fmt.Errorf("PastesRepo.GetPaste.Builder: %w", err)
 	}
 
 	paste := entity.Paste{}
 
-	err = r.pg.Pool.QueryRow(ctx, sql, args...).
+	err = r.pg.Pool.QueryRow(ctx, s, args...).
 		Scan(
 			&paste.Hash,
+			&paste.UserID,
+			&paste.Title,
 			&paste.Format,
 			&paste.Password.Hash,
-			&paste.CreatedAt,
 			&paste.ExpiresAt,
+			&paste.CreatedAt,
 		)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, usecase.ErrRecordNotFound
+		}
+
 		return nil, fmt.Errorf("PastesRepo.GetPaste.Pool.QueryRow: %w", err)
 	}
 
@@ -83,12 +93,12 @@ func (r *PastesRepo) Create(ctx context.Context, p *entity.Paste) error {
 		query   = r.pg.Builder.Insert("pastes")
 	)
 
-	if p.Name != "" {
-		columns = append(columns, "name")
-		values = append(values, p.Name)
+	if p.Title != "" {
+		columns = append(columns, "title")
+		values = append(values, p.Title)
 	}
 
-	if p.UserID != "" {
+	if p.UserID.Valid {
 		columns = append(columns, "user_id")
 		values = append(values, p.UserID)
 	}
@@ -106,7 +116,7 @@ func (r *PastesRepo) Create(ctx context.Context, p *entity.Paste) error {
 	sql, args, err := query.
 		Columns(columns...).
 		Values(values...).
-		Suffix("RETURNING created_at").
+		Suffix("RETURNING created_at, expires_at").
 		ToSql()
 	if err != nil {
 		return fmt.Errorf("PastesRepo.CreatePaste.Builder: %w", err)
@@ -114,7 +124,7 @@ func (r *PastesRepo) Create(ctx context.Context, p *entity.Paste) error {
 
 	err = r.pg.Pool.
 		QueryRow(ctx, sql, args...).
-		Scan(&p.CreatedAt)
+		Scan(&p.CreatedAt, &p.ExpiresAt)
 	if err != nil {
 		return fmt.Errorf("PastesRepo.CreatePaste.Pool.Begin: %w", err)
 	}

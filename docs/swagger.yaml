@@ -8,8 +8,8 @@ definitions:
         enum:
         - 30m
         - 1h
-        - 1w
-        - 1mth
+        - 168h
+        - 5040h
         example: 30m
         type: string
       format:
@@ -18,21 +18,21 @@ definitions:
         - json
         - yaml
         - toml
-        example: json
-        type: string
-      name:
-        description: Название
-        example: thie is paste
-        maxLength: 255
+        example: plaintext
         type: string
       password:
         description: Пароль для получения доступа к пасте
-        example: hello
+        example: password for security
         maxLength: 255
         type: string
       text:
         description: Текст
-        example: this is my paste
+        example: Some very secret text
+        type: string
+      title:
+        description: Название
+        example: The private paste
+        maxLength: 255
         type: string
     required:
     - format
@@ -56,6 +56,17 @@ definitions:
       title:
         description: Название
         type: string
+    type: object
+  UnlockPasteBody:
+    description: Тело запроса для разблокировки пасты.
+    properties:
+      password:
+        description: Пароль
+        example: hello
+        maxLength: 255
+        type: string
+    required:
+    - password
     type: object
 host: localhost:8080
 info:
@@ -121,17 +132,11 @@ paths:
       tags:
       - pastes
     get:
-      consumes:
-      - application/json
       parameters:
       - description: Хеш пасты
         in: path
         name: hash
         required: true
-        type: string
-      - description: Пароль
-        in: query
-        name: passwd
         type: string
       produces:
       - application/json
@@ -140,6 +145,13 @@ paths:
           description: OK
           schema:
             properties:
+              data:
+                properties:
+                  paste:
+                    $ref: '#/definitions/PasteResponse'
+                  url:
+                    type: string
+                type: object
               message:
                 type: string
             type: object
@@ -150,7 +162,64 @@ paths:
               error:
                 type: string
             type: object
+        "404":
+          description: Not Found
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
       summary: Получениие пасту по хешу
+      tags:
+      - pastes
+  /pastes/{hash}/unlock:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Хеш пасты
+        in: path
+        name: hash
+        required: true
+        type: string
+      - description: Пароль
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/UnlockPasteBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                properties:
+                  paste:
+                    $ref: '#/definitions/PasteResponse'
+                  url:
+                    type: string
+                type: object
+              message:
+                type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      summary: Получение доступа к пасте с паролем.
       tags:
       - pastes
   /token:

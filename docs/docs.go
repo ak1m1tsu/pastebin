@@ -66,9 +66,6 @@ const docTemplate = `{
         },
         "/pastes/{hash}": {
             "get": {
-                "consumes": [
-                    "application/json"
-                ],
                 "produces": [
                     "application/json"
                 ],
@@ -83,12 +80,6 @@ const docTemplate = `{
                         "name": "hash",
                         "in": "path",
                         "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Пароль",
-                        "name": "passwd",
-                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -97,6 +88,17 @@ const docTemplate = `{
                         "schema": {
                             "type": "object",
                             "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "properties": {
+                                        "paste": {
+                                            "$ref": "#/definitions/PasteResponse"
+                                        },
+                                        "url": {
+                                            "type": "string"
+                                        }
+                                    }
+                                },
                                 "message": {
                                     "type": "string"
                                 }
@@ -105,6 +107,17 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "type": "object",
                             "properties": {
@@ -148,6 +161,84 @@ const docTemplate = `{
                             "type": "object",
                             "properties": {
                                 "message": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/pastes/{hash}/unlock": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "pastes"
+                ],
+                "summary": "Получение доступа к пасте с паролем.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Хеш пасты",
+                        "name": "hash",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Пароль",
+                        "name": "credentials",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/UnlockPasteBody"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "object",
+                                    "properties": {
+                                        "paste": {
+                                            "$ref": "#/definitions/PasteResponse"
+                                        },
+                                        "url": {
+                                            "type": "string"
+                                        }
+                                    }
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
                                     "type": "string"
                                 }
                             }
@@ -205,8 +296,8 @@ const docTemplate = `{
                     "enum": [
                         "30m",
                         "1h",
-                        "1w",
-                        "1mth"
+                        "168h",
+                        "5040h"
                     ],
                     "example": "30m"
                 },
@@ -218,24 +309,24 @@ const docTemplate = `{
                         "yaml",
                         "toml"
                     ],
-                    "example": "json"
-                },
-                "name": {
-                    "description": "Название",
-                    "type": "string",
-                    "maxLength": 255,
-                    "example": "thie is paste"
+                    "example": "plaintext"
                 },
                 "password": {
                     "description": "Пароль для получения доступа к пасте",
                     "type": "string",
                     "maxLength": 255,
-                    "example": "hello"
+                    "example": "password for security"
                 },
                 "text": {
                     "description": "Текст",
                     "type": "string",
-                    "example": "this is my paste"
+                    "example": "Some very secret text"
+                },
+                "title": {
+                    "description": "Название",
+                    "type": "string",
+                    "maxLength": 255,
+                    "example": "The private paste"
                 }
             }
         },
@@ -262,6 +353,21 @@ const docTemplate = `{
                 "title": {
                     "description": "Название",
                     "type": "string"
+                }
+            }
+        },
+        "UnlockPasteBody": {
+            "description": "Тело запроса для разблокировки пасты.",
+            "type": "object",
+            "required": [
+                "password"
+            ],
+            "properties": {
+                "password": {
+                    "description": "Пароль",
+                    "type": "string",
+                    "maxLength": 255,
+                    "example": "hello"
                 }
             }
         }

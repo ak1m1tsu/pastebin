@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/romankravchuk/pastebin/internal/entity"
@@ -65,11 +66,15 @@ func (uc *PastesUseCase) Get(ctx context.Context, hash string) (*entity.Paste, e
 	if !ok {
 		paste, err = uc.repo.Get(ctx, hash)
 		if err != nil {
+			if errors.Is(err, ErrRecordNotFound) {
+				return nil, ErrPasteNotFound
+			}
+
 			return nil, fmt.Errorf("PastesUseCase.Get: %w", err)
 		}
 	}
 
-	paste.File, err = uc.objs.Get(ctx, paste.UserID, paste.Hash)
+	paste.File, err = uc.objs.Get(ctx, paste.UserID.String, paste.Hash)
 	if err != nil {
 		return nil, fmt.Errorf("PastesUseCase.Get: %w", err)
 	}
