@@ -41,6 +41,7 @@ func CreatePasteToEntity(body *entity.CreatePasteBody) (*entity.Paste, error) {
 		if err != nil {
 			return nil, err
 		}
+
 		p.ExpiresAt = time.Now().Add(d)
 	}
 
@@ -51,6 +52,7 @@ func ModelToResponse(model *entity.Paste) *entity.PasteResponse {
 	return &entity.PasteResponse{
 		Hash:      model.Hash,
 		Title:     model.Title,
+		Text:      string(model.File),
 		Format:    model.Format,
 		ExpiresAt: model.ExpiresAt.Format(time.RFC1123),
 		CreatedAt: model.CreatedAt.Format(time.RFC1123),

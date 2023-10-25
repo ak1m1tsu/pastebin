@@ -66,13 +66,14 @@ const docTemplate = `{
         },
         "/pastes/{hash}": {
             "get": {
+                "description": "Получение посты по хешу.\nЕсли паста защищена паролем, то нужно обратиться к ` + "`" + `/pastes/{hash}/unlock` + "`" + `, чтобы получить доступ к ней.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "pastes"
                 ],
-                "summary": "Получениие пасту по хешу",
+                "summary": "Получениие пасты.",
                 "parameters": [
                     {
                         "type": "string",
@@ -93,9 +94,6 @@ const docTemplate = `{
                                     "properties": {
                                         "paste": {
                                             "$ref": "#/definitions/PasteResponse"
-                                        },
-                                        "url": {
-                                            "type": "string"
                                         }
                                     }
                                 },
@@ -105,8 +103,8 @@ const docTemplate = `{
                             }
                         }
                     },
-                    "400": {
-                        "description": "Bad Request",
+                    "403": {
+                        "description": "Forbidden",
                         "schema": {
                             "type": "object",
                             "properties": {
@@ -118,6 +116,17 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "type": "object",
                             "properties": {
@@ -161,6 +170,39 @@ const docTemplate = `{
                             "type": "object",
                             "properties": {
                                 "message": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
                                     "type": "string"
                                 }
                             }
@@ -235,6 +277,17 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "type": "object",
                             "properties": {
@@ -350,6 +403,10 @@ const docTemplate = `{
                     "description": "Уникальный идентификатор",
                     "type": "string"
                 },
+                "text": {
+                    "description": "Текст",
+                    "type": "string"
+                },
                 "title": {
                     "description": "Название",
                     "type": "string"
@@ -384,7 +441,7 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "localhost:8080",
+	Host:             "",
 	BasePath:         "/api/v1",
 	Schemes:          []string{},
 	Title:            "Pastebin API",

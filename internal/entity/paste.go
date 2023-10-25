@@ -74,6 +74,8 @@ type PasteResponse struct {
 	Hash string `json:"hash"`
 	// Название
 	Title string `json:"title,omitempty"`
+	// Текст
+	Text string `json:"text"`
 	// Формат текста
 	Format string `json:"format"`
 	// Дата создания

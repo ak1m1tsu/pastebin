@@ -134,14 +134,17 @@ func (h *handler) HandleCreatePaste(w http.ResponseWriter, r *http.Request) {
 
 // HandleGetPasteByHash godoc
 //
-//	@summary	Получениие пасту по хешу
-//	@tags		pastes
-//	@produce	json
-//	@param		hash	path		string	true	"Хеш пасты"
-//	@success	200		{object}	any{message=string,data=any{paste=entity.PasteResponse,url=string}}
-//	@failure	400		{object}	any{error=string}
-//	@failure	404		{object}	any{error=string}
-//	@router		/pastes/{hash} [get]
+//	@summary		Получениие пасты.
+//	@description	Получение посты по хешу.
+//	@description	Если паста защищена паролем, то нужно обратиться к `/pastes/{hash}/unlock`, чтобы получить доступ к ней.
+//	@tags			pastes
+//	@produce		json
+//	@param			hash	path		string	true	"Хеш пасты"
+//	@success		200		{object}	any{message=string,data=any{paste=entity.PasteResponse}}
+//	@failure		403		{object}	any{error=string}
+//	@failure		404		{object}	any{error=string}
+//	@failure		500		{object}	any{error=string}
+//	@router			/pastes/{hash} [get]
 func (h *handler) HandleGetPasteByHash(w http.ResponseWriter, r *http.Request) {
 	var (
 		hash        = chi.URLParam(r, "hash")
@@ -191,6 +194,9 @@ func (h *handler) HandleGetPasteByHash(w http.ResponseWriter, r *http.Request) {
 //	@produce	json
 //	@param		hash	path		string	true	"Хеш пасты"
 //	@success	200		{object}	any{message=string}
+//	@failure	403		{object}	any{error=string}
+//	@failure	404		{object}	any{error=string}
+//	@failure	500		{object}	any{error=string}
 //	@security	Bearer
 //	@router		/pastes/{hash} [delete]
 func (h *handler) HandleDeletePaste(w http.ResponseWriter, r *http.Request) {
@@ -210,6 +216,7 @@ func (h *handler) HandleDeletePaste(w http.ResponseWriter, r *http.Request) {
 //	@success	200			{object}	any{message=string,data=any{paste=entity.PasteResponse,url=string}}
 //	@failure	403			{object}	any{error=string}
 //	@failure	404			{object}	any{error=string}
+//	@failure	500			{object}	any{error=string}
 //	@router		/pastes/{hash}/unlock [post]
 func (h *handler) HandleUnlockPaste(w http.ResponseWriter, r *http.Request) {
 	response.OK(w, r, render.M{

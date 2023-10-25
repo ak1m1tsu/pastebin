@@ -5,9 +5,12 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/cors"
 	"github.com/go-chi/render"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/romankravchuk/pastebin/config"
+	"github.com/romankravchuk/pastebin/internal/controller/http/middleware/logger"
 	"github.com/romankravchuk/pastebin/internal/controller/http/v1/auth"
 	"github.com/romankravchuk/pastebin/internal/controller/http/v1/paste"
 	"github.com/romankravchuk/pastebin/internal/usecase"
@@ -30,7 +33,6 @@ import (
 //	@title						Pastebin API
 //	@description				Implementation pastebin API
 //	@version					1.0
-//	@host						localhost:8080
 //	@BasePath					/api/v1
 //
 //	@securitydefinitions.apiKey	Bearer
@@ -59,6 +61,17 @@ func NewRouter(mux chi.Router, cfg *config.Config, l *log.Logger) error {
 		auc    = usecase.NewAuth(nil)
 		puc    = usecase.NewPastes(prepo, pblob, pcache)
 	)
+
+	mux.Use(middleware.RealIP)
+	mux.Use(logger.New(l))
+	mux.Use(cors.Handler(cors.Options{
+		AllowedOrigins:   []string{"http://*", "https://*"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		AllowCredentials: true,
+		ExposedHeaders:   []string{"Link", "Location"},
+		MaxAge:           300,
+	}))
 
 	mux.Get("/swagger/*", swagger.Handler())
 

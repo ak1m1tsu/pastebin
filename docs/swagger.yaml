@@ -53,6 +53,9 @@ definitions:
       hash:
         description: Уникальный идентификатор
         type: string
+      text:
+        description: Текст
+        type: string
       title:
         description: Название
         type: string
@@ -68,7 +71,6 @@ definitions:
     required:
     - password
     type: object
-host: localhost:8080
 info:
   contact: {}
   description: Implementation pastebin API
@@ -126,12 +128,36 @@ paths:
               message:
                 type: string
             type: object
+        "403":
+          description: Forbidden
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
       security:
       - Bearer: []
       summary: Удаление пасты по хешу
       tags:
       - pastes
     get:
+      description: |-
+        Получение посты по хешу.
+        Если паста защищена паролем, то нужно обратиться к `/pastes/{hash}/unlock`, чтобы получить доступ к ней.
       parameters:
       - description: Хеш пасты
         in: path
@@ -149,14 +175,12 @@ paths:
                 properties:
                   paste:
                     $ref: '#/definitions/PasteResponse'
-                  url:
-                    type: string
                 type: object
               message:
                 type: string
             type: object
-        "400":
-          description: Bad Request
+        "403":
+          description: Forbidden
           schema:
             properties:
               error:
@@ -169,7 +193,14 @@ paths:
               error:
                 type: string
             type: object
-      summary: Получениие пасту по хешу
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      summary: Получениие пасты.
       tags:
       - pastes
   /pastes/{hash}/unlock:
@@ -214,6 +245,13 @@ paths:
             type: object
         "404":
           description: Not Found
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
           schema:
             properties:
               error:
