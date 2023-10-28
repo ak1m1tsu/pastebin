@@ -38,6 +38,13 @@ definitions:
     - format
     - text
     type: object
+  CreateTokenRequest:
+    description: Payload for creating a new user if not exists and get access token.
+    properties:
+      code:
+        description: Github oauth2 code
+        type: string
+    type: object
   PasteResponse:
     description: Тело ответа на создание пасты.
     properties:
@@ -70,6 +77,18 @@ definitions:
         type: string
     required:
     - password
+    type: object
+  UserInfo:
+    description: Payload for getting user info.
+    properties:
+      avatar_url:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      username:
+        type: string
     type: object
 info:
   contact: {}
@@ -287,18 +306,35 @@ paths:
       tags:
       - pastes
   /token:
-    get:
+    post:
+      consumes:
+      - application/json
       parameters:
       - description: Уникальный код, сгенерированный OAuth2 приложением
-        in: query
+        in: body
         name: code
         required: true
-        type: string
+        schema:
+          $ref: '#/definitions/CreateTokenRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
+          schema:
+            properties:
+              message:
+                type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              message:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
           schema:
             properties:
               message:

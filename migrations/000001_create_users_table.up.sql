@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS users (
     updated_at timestamp(0) with time zone NOT NULL DEFAULT NOW(),
     username text UNIQUE NOT NULL,
     email citext UNIQUE NOT NULL,
-    avatar path NOT NULL,
+    avatar text NOT NULL,
     access_token bytea NOT NULL,
     deleted bool NOT NULL DEFAULT false
 );

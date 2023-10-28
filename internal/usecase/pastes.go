@@ -28,6 +28,11 @@ func NewPastes(r PastesRepo, o PastesBlobStorage, c PastesCache) *PastesUseCase 
 //
 // Uploads paste text to obj storage and stores paste metadata to database.
 func (uc *PastesUseCase) Create(ctx context.Context, p *entity.Paste) error {
+	userID, ok := ctx.Value(entity.UserIDKey).(string)
+	if ok {
+		p.UserID.String = userID
+	}
+
 	if err := uc.objs.Create(ctx, p); err != nil {
 		return fmt.Errorf("PastesUseCase.Create: %w", err)
 	}

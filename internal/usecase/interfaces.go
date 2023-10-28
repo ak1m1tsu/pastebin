@@ -38,13 +38,20 @@ type PastesCache interface {
 	Delete(context.Context, string) error
 }
 
-//go:generate go run github.com/vektra/mockery/v2@v2.20.2 --name OAuthWebAPI --output ./mocks --outpkg mocks
-type OAuthWebAPI interface {
-	GetToken(code string) (*oauth2.Token, error)
-	GetUserInfo(token *oauth2.Token) (*entity.User, error)
+//go:generate go run github.com/vektra/mockery/v2@v2.20.2 --name AuthWebAPI --output ./mocks --outpkg mocks
+type AuthWebAPI interface {
+	GetToken(ctx context.Context, code string) (*oauth2.Token, error)
+	GetUserInfo(ctx context.Context, token *oauth2.Token) (*entity.APIUser, error)
 }
 
 //go:generate go run github.com/vektra/mockery/v2@v2.20.2 --name Auth --output ./mocks --outpkg mocks
 type Auth interface {
-	Login(ctx context.Context, code string) (*entity.User, error)
+	Token(ctx context.Context, req entity.CreateTokenRequest) (*entity.TokenCredentails, error)
+	CreateUser(ctx context.Context, req entity.CreateTokenRequest) (*entity.User, error)
+}
+
+//go:generate go run github.com/vektra/mockery/v2@v2.20.2 --name UsersRepo --output ./mocks --outpkg mocks
+type UsersRepo interface {
+	Create(ctx context.Context, u *entity.User) error
+	GetByEmail(ctx context.Context, email string) (*entity.User, error)
 }

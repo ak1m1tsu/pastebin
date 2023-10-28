@@ -14,25 +14,51 @@ type Auth struct {
 	mock.Mock
 }
 
-// Login provides a mock function with given fields: ctx, code
-func (_m *Auth) Login(ctx context.Context, code string) (*entity.User, error) {
-	ret := _m.Called(ctx, code)
+// CreateUser provides a mock function with given fields: ctx, req
+func (_m *Auth) CreateUser(ctx context.Context, req entity.CreateTokenRequest) (*entity.User, error) {
+	ret := _m.Called(ctx, req)
 
 	var r0 *entity.User
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) (*entity.User, error)); ok {
-		return rf(ctx, code)
+	if rf, ok := ret.Get(0).(func(context.Context, entity.CreateTokenRequest) (*entity.User, error)); ok {
+		return rf(ctx, req)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string) *entity.User); ok {
-		r0 = rf(ctx, code)
+	if rf, ok := ret.Get(0).(func(context.Context, entity.CreateTokenRequest) *entity.User); ok {
+		r0 = rf(ctx, req)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*entity.User)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
-		r1 = rf(ctx, code)
+	if rf, ok := ret.Get(1).(func(context.Context, entity.CreateTokenRequest) error); ok {
+		r1 = rf(ctx, req)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Token provides a mock function with given fields: ctx, req
+func (_m *Auth) Token(ctx context.Context, req entity.CreateTokenRequest) (*entity.TokenCredentails, error) {
+	ret := _m.Called(ctx, req)
+
+	var r0 *entity.TokenCredentails
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, entity.CreateTokenRequest) (*entity.TokenCredentails, error)); ok {
+		return rf(ctx, req)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, entity.CreateTokenRequest) *entity.TokenCredentails); ok {
+		r0 = rf(ctx, req)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*entity.TokenCredentails)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, entity.CreateTokenRequest) error); ok {
+		r1 = rf(ctx, req)
 	} else {
 		r1 = ret.Error(1)
 	}

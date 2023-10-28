@@ -17,6 +17,7 @@ import (
 	"github.com/romankravchuk/pastebin/internal/usecase/blob"
 	"github.com/romankravchuk/pastebin/internal/usecase/cache"
 	"github.com/romankravchuk/pastebin/internal/usecase/repo"
+	"github.com/romankravchuk/pastebin/internal/usecase/webapi"
 	"github.com/romankravchuk/pastebin/pkg/log"
 	"github.com/romankravchuk/pastebin/pkg/minio"
 	"github.com/romankravchuk/pastebin/pkg/postgres"
@@ -55,11 +56,13 @@ func NewRouter(mux chi.Router, cfg *config.Config, l *log.Logger) error {
 	}
 
 	var (
-		pcache = cache.NewPastesCache(rd)
-		pblob  = blob.New(m)
-		prepo  = repo.NewPastesRepo(pg)
-		auc    = usecase.NewAuth(nil)
-		puc    = usecase.NewPastes(prepo, pblob, pcache)
+		pcache   = cache.NewPastesCache(rd)
+		pblob    = blob.New(m)
+		prepo    = repo.NewPastesRepo(pg)
+		urepo    = repo.NewUsersRepo(pg)
+		oauthapi = webapi.New(cfg.OAuth.ClientID, cfg.OAuth.ClientSecret)
+		auc      = usecase.NewAuth(urepo, oauthapi)
+		puc      = usecase.NewPastes(prepo, pblob, pcache)
 	)
 
 	mux.Use(middleware.RealIP)

@@ -342,7 +342,10 @@ const docTemplate = `{
             }
         },
         "/token": {
-            "get": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -352,16 +355,40 @@ const docTemplate = `{
                 "summary": "Получения авторизационных данных",
                 "parameters": [
                     {
-                        "type": "string",
                         "description": "Уникальный код, сгенерированный OAuth2 приложением",
                         "name": "code",
-                        "in": "query",
-                        "required": true
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/CreateTokenRequest"
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "type": "object",
                             "properties": {
@@ -424,6 +451,16 @@ const docTemplate = `{
                 }
             }
         },
+        "CreateTokenRequest": {
+            "description": "Payload for creating a new user if not exists and get access token.",
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "Github oauth2 code",
+                    "type": "string"
+                }
+            }
+        },
         "PasteResponse": {
             "description": "Тело ответа на создание пасты.",
             "type": "object",
@@ -466,6 +503,24 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 255,
                     "example": "hello"
+                }
+            }
+        },
+        "UserInfo": {
+            "description": "Payload for getting user info.",
+            "type": "object",
+            "properties": {
+                "avatar_url": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
                 }
             }
         }

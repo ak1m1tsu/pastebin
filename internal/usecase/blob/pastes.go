@@ -83,7 +83,12 @@ func (bs *PastesBlobStorage) Get(ctx context.Context, userID, id string) (entity
 	return data, nil
 }
 
-// Update implements usecase.PastesBlobStorage.
-func (*PastesBlobStorage) Update(ctx context.Context, p *entity.Paste) error {
-	panic("unimplemented")
+// Update updates a file in obj storage.
+func (bs *PastesBlobStorage) Update(ctx context.Context, p *entity.Paste) error {
+	err := bs.m.UploadObject(ctx, p.UserID.String, p.Hash, p.File.Size(), bytes.NewReader(p.File))
+	if err != nil {
+		return fmt.Errorf("PastesBlobStorage.Update: %w", err)
+	}
+
+	return nil
 }
