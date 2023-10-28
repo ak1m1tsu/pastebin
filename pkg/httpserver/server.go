@@ -2,6 +2,8 @@ package httpserver
 
 import (
 	"context"
+	"io"
+	"log"
 	"net/http"
 	"time"
 )
@@ -25,6 +27,7 @@ func New(handler http.Handler, opts ...Option) *Server {
 		ReadTimeout:  defaultReadTimeout,
 		WriteTimeout: defaultWriteTimeout,
 		Addr:         defaultAddr,
+		ErrorLog:     log.New(io.Discard, "", 0),
 	}
 
 	s := &Server{

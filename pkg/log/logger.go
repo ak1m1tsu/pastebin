@@ -2,6 +2,7 @@ package log
 
 import (
 	"io"
+	"log"
 
 	"github.com/rs/zerolog"
 )
@@ -117,11 +118,15 @@ func (l *Logger) Fatal(msg string, err error, fields FF) {
 }
 
 // Panic logs a message with log level Panic.
-func (l *Logger) Panic(msg string, err error, fields FF) {
-	l.zerolog.Panic().Array(fiedsKey, fields).Err(err).Msg(msg)
+func (l *Logger) Panic(msg string, fields FF) {
+	l.zerolog.Panic().Array(fiedsKey, fields).Msg(msg)
 }
 
 // GetLevel returns the logger log level.
 func (l *Logger) GetLevel() Level {
 	return l.level
+}
+
+func (l *Logger) Logger() *log.Logger {
+	return nil
 }

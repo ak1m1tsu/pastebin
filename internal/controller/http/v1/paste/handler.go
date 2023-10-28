@@ -49,6 +49,9 @@ func New(mux chi.Router, uc usecase.Pastes, l *log.Logger) {
 //	@produce	json
 //	@param		paste	body		entity.CreatePasteBody	true	"Паста"
 //	@success	200		{object}	any{message=string,data=any{paste=entity.PasteResponse,url=string}}
+//	@failure	400		{object}	any{message=string}
+//	@failure	422		{object}	any{message=string,errors=any{field=string,message=string}}
+//	@failure	500		{object}	any{message=string}
 //	@router		/pastes [post]
 func (h *handler) HandleCreatePaste(w http.ResponseWriter, r *http.Request) {
 	input := new(entity.CreatePasteBody)
@@ -146,11 +149,9 @@ func (h *handler) HandleCreatePaste(w http.ResponseWriter, r *http.Request) {
 //	@failure		500		{object}	any{error=string}
 //	@router			/pastes/{hash} [get]
 func (h *handler) HandleGetPasteByHash(w http.ResponseWriter, r *http.Request) {
-	var (
-		hash        = chi.URLParam(r, "hash")
-		ctx, cancel = context.WithTimeout(r.Context(), h.tm)
-	)
+	hash := chi.URLParam(r, "hash")
 
+	ctx, cancel := context.WithTimeout(r.Context(), h.tm)
 	defer cancel()
 
 	paste, err := h.uc.Get(ctx, hash)
@@ -200,6 +201,32 @@ func (h *handler) HandleGetPasteByHash(w http.ResponseWriter, r *http.Request) {
 //	@security	Bearer
 //	@router		/pastes/{hash} [delete]
 func (h *handler) HandleDeletePaste(w http.ResponseWriter, r *http.Request) {
+	hash := chi.URLParam(r, "hash")
+
+	ctx, cancel := context.WithTimeout(r.Context(), h.tm)
+	defer cancel()
+
+	err := h.uc.Delete(ctx, hash)
+	if err != nil {
+		switch {
+		case errors.Is(err, context.Canceled):
+		case errors.Is(err, usecase.ErrPasteNotFound):
+			h.l.Warn("unable to delete paste by hash", log.FF{{Key: "Hash", Value: hash}})
+
+			response.NotFound(w, r)
+		case errors.Is(err, usecase.ErrNotPasteAuthor):
+			h.l.Warn("unable to delete paste by hash", log.FF{{Key: "Hash", Value: hash}})
+
+			response.Forbidden(w, r)
+		default:
+			h.l.Error("unable to delete paste by hash", err, log.FF{{Key: "Hash", Value: hash}})
+
+			response.InternalServerError(w, r)
+		}
+
+		return
+	}
+
 	response.OK(w, r, render.M{
 		"message": "ok",
 	})
@@ -213,13 +240,59 @@ func (h *handler) HandleDeletePaste(w http.ResponseWriter, r *http.Request) {
 //	@produce	json
 //	@param		hash		path		string					true	"Хеш пасты"
 //	@param		credentials	body		entity.UnlockPasteBody	true	"Пароль"
-//	@success	200			{object}	any{message=string,data=any{paste=entity.PasteResponse,url=string}}
+//	@success	200			{object}	any{message=string,data=any{paste=entity.PasteResponse}}
 //	@failure	403			{object}	any{error=string}
 //	@failure	404			{object}	any{error=string}
 //	@failure	500			{object}	any{error=string}
 //	@router		/pastes/{hash}/unlock [post]
 func (h *handler) HandleUnlockPaste(w http.ResponseWriter, r *http.Request) {
+	hash := chi.URLParam(r, "hash")
+
+	var input entity.UnlockPasteBody
+
+	if err := render.DecodeJSON(r.Body, &input); err != nil {
+		h.l.Error("failed to parse input data", err,
+			log.FF{
+				{Key: "input", Value: input},
+			})
+
+		response.BadRequest(w, r)
+
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), h.tm)
+	defer cancel()
+
+	paste, err := h.uc.Get(ctx, hash)
+	if err != nil {
+		switch {
+		case errors.Is(err, context.Canceled):
+		case errors.Is(err, usecase.ErrPasteNotFound):
+			h.l.Warn("unable to get paste by hash", log.FF{{Key: "Hash", Value: hash}})
+
+			response.NotFound(w, r)
+		default:
+			h.l.Error("failed to get paste by hash", err, log.FF{{Key: "Hash", Value: hash}})
+
+			response.InternalServerError(w, r)
+		}
+
+		return
+	}
+
+	if !paste.Password.Matches(input.Password) {
+		h.l.Warn("failed to unlock paste: invalid password", log.FF{{Key: "hash", Value: hash}})
+
+		response.Forbidden(w, r)
+
+		return
+	}
+
 	response.OK(w, r, render.M{
 		"message": "ok",
+		"data": render.M{
+			"paste": converter.ModelToResponse(paste),
+		},
 	})
 }

@@ -105,6 +105,34 @@ paths:
               message:
                 type: string
             type: object
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              message:
+                type: string
+            type: object
+        "422":
+          description: Unprocessable Entity
+          schema:
+            properties:
+              errors:
+                properties:
+                  field:
+                    type: string
+                  message:
+                    type: string
+                type: object
+              message:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              message:
+                type: string
+            type: object
       summary: Создание нововой пасты
       tags:
       - pastes
@@ -230,8 +258,6 @@ paths:
                 properties:
                   paste:
                     $ref: '#/definitions/PasteResponse'
-                  url:
-                    type: string
                 type: object
               message:
                 type: string

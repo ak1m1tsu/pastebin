@@ -20,7 +20,7 @@ func (r *UsersRepo) Create(_ context.Context, u *entity.User) error {
 	_, _, err := r.Builder.
 		Insert("users").
 		Columns("username", "email", "avatar", "access_token").
-		Values(u.Username, u.Email, u.Avatar, u.AccessToken()).
+		Values(u.Username, u.Email, u.Avatar, u.AccessToken).
 		Suffix("RETURNING id, created_at").
 		ToSql()
 	if err != nil {

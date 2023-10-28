@@ -20,12 +20,12 @@ func New(l *log.Logger) func(next http.Handler) http.Handler {
 
 			defer func() {
 				if rec := recover(); rec != nil {
-					l.Error(
+					l.Panic(
 						"recoved system error",
-						rec.(error),
 						log.FF{
+							{Key: "recover", Value: rec},
 							{Key: "duration", Value: time.Since(start)},
-							{Key: "stack", Value: debug.Stack()},
+							{Key: "stack", Value: string(debug.Stack())},
 						},
 					)
 

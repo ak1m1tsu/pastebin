@@ -27,7 +27,7 @@ type PastesRepo interface {
 type PastesBlobStorage interface {
 	Create(ctx context.Context, p *entity.Paste) error
 	Get(ctx context.Context, userID, hash string) (entity.File, error)
-	Delete(ctx context.Context, hash string) error
+	Delete(ctx context.Context, userID, hash string) error
 	Update(ctx context.Context, p *entity.Paste) error
 }
 

@@ -44,9 +44,17 @@ func (bs *PastesBlobStorage) Create(ctx context.Context, p *entity.Paste) error 
 	return nil
 }
 
-// Delete implements usecase.PastesBlobStorage.
-func (*PastesBlobStorage) Delete(ctx context.Context, id string) error {
-	panic("unimplemented")
+// Delete deletes a file from obj storage.
+func (bs *PastesBlobStorage) Delete(ctx context.Context, userID, id string) error {
+	if userID == "" {
+		userID = public
+	}
+
+	if err := bs.m.DeleteObject(ctx, userID, id); err != nil {
+		return fmt.Errorf("PastesBlobStorage.Delete: %w", err)
+	}
+
+	return nil
 }
 
 // Get returns a file from obj storage.

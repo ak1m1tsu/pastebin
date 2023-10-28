@@ -40,13 +40,29 @@ func (uc *PastesUseCase) Create(ctx context.Context, p *entity.Paste) error {
 	return nil
 }
 
-// Delete implements Pastes.
-func (uc *PastesUseCase) Delete(ctx context.Context, id string) error {
-	if err := uc.objs.Delete(ctx, id); err != nil {
+// Delete deletes a paste.
+// Fetch user id from context, if context does not have user id or
+// user id from paste does not eq user id from context returns ErrNotPasteAuthor.
+func (uc *PastesUseCase) Delete(ctx context.Context, hash string) error {
+	userID, ok := ctx.Value(entity.UserIDKey).(string)
+	if !ok {
+		return ErrNotPasteAuthor
+	}
+
+	paste, err := uc.repo.Get(ctx, hash)
+	if err != nil {
 		return fmt.Errorf("PastesUseCase.Delete: %w", err)
 	}
 
-	if err := uc.repo.Delete(ctx, id); err != nil {
+	if paste.UserID.String != userID {
+		return ErrNotPasteAuthor
+	}
+
+	if err := uc.objs.Delete(ctx, "", hash); err != nil {
+		return fmt.Errorf("PastesUseCase.Delete: %w", err)
+	}
+
+	if err := uc.repo.Delete(ctx, hash); err != nil {
 		return fmt.Errorf("PastesUseCase.Delete: %w", err)
 	}
 

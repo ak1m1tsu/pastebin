@@ -28,13 +28,13 @@ func (_m *PastesBlobStorage) Create(ctx context.Context, p *entity.Paste) error 
 	return r0
 }
 
-// Delete provides a mock function with given fields: ctx, hash
-func (_m *PastesBlobStorage) Delete(ctx context.Context, hash string) error {
-	ret := _m.Called(ctx, hash)
+// Delete provides a mock function with given fields: ctx, userID, hash
+func (_m *PastesBlobStorage) Delete(ctx context.Context, userID string, hash string) error {
+	ret := _m.Called(ctx, userID, hash)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) error); ok {
-		r0 = rf(ctx, hash)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) error); ok {
+		r0 = rf(ctx, userID, hash)
 	} else {
 		r0 = ret.Error(0)
 	}
