@@ -20,7 +20,7 @@ type PastesBlobStorage struct {
 	m *minio.Minio
 }
 
-func New(m *minio.Minio) *PastesBlobStorage {
+func NewPastesBlobStorage(m *minio.Minio) *PastesBlobStorage {
 	return &PastesBlobStorage{m: m}
 }
 

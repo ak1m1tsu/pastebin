@@ -19,7 +19,7 @@ type GithubAPI struct {
 	infoEndpoint string
 }
 
-func New(clientID, clientSecret string) *GithubAPI {
+func NewGithubAPI(clientID, clientSecret string) *GithubAPI {
 	return &GithubAPI{
 		cfg: &oauth2.Config{
 			ClientID:     clientID,

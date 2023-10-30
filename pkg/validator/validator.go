@@ -45,10 +45,11 @@ func (v *Validator) Valid(input interface{}) bool {
 
 	if err != nil {
 		if errors.As(err, &errs) {
+			v.mu.Lock()
+			defer v.mu.Unlock()
+
 			for _, e := range errs {
-				v.mu.Lock()
 				v.errors[e.Field()] = e.Translate(v.translator)
-				v.mu.Unlock()
 			}
 		}
 

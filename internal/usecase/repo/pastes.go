@@ -17,7 +17,7 @@ type PastesRepo struct {
 	pg *postgres.Postgres
 }
 
-func NewPastesRepo(pg *postgres.Postgres) *PastesRepo {
+func NewPastesRepositry(pg *postgres.Postgres) *PastesRepo {
 	return &PastesRepo{pg: pg}
 }
 

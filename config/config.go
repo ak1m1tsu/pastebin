@@ -52,7 +52,7 @@ type (
 	}
 )
 
-func NewConfig() (*Config, error) {
+func New() (*Config, error) {
 	cfg := new(Config)
 
 	err := cleanenv.ReadConfig("./config/config.yml", cfg)

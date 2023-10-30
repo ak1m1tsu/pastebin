@@ -17,7 +17,7 @@ type handler struct {
 	l  *log.Logger
 }
 
-func New(mux chi.Router, uc usecase.Auth, l *log.Logger) {
+func MountRoutes(mux chi.Router, uc usecase.Auth, l *log.Logger) {
 	h := &handler{
 		uc: uc,
 		l:  l,
@@ -33,10 +33,8 @@ func New(mux chi.Router, uc usecase.Auth, l *log.Logger) {
 //
 //	@summary	Получения авторизационных данных
 //	@tags		auth
-//	@produce	json
-//
 //	@accept		json
-//
+//	@produce	json
 //	@param		code	body		entity.CreateTokenRequest	true	"Уникальный код, сгенерированный OAuth2 приложением"
 //	@success	200		{object}	any{message=string}
 //	@failure	400		{object}	any{message=string}
@@ -73,14 +71,17 @@ func (h *handler) HandleGetToken(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// HandleRegistryUser godoc
+// HandleRegistryUser godoc.
 //
 //	@summary	Регистрация нового пользователя с помощью Github OAuth 2.0
 //	@tags		auth
-//	@produce	json
 //	@accept		json
+//	@produce	json
 //	@param		code	body		entity.CreateTokenRequest	true	"Уникальный код, сгенерированный OAuth2 приложением"
 //	@success	200		{object}	any{message=string,data=any{user=entity.UserResponse}}
+//	@failure	400		{object}	any{message=string}
+//	@failure	500		{object}	any{message=string}
+//	@router		/  [post]
 func (h *handler) HandleRegistryUser(w http.ResponseWriter, r *http.Request) {
 	var input entity.CreateTokenRequest
 

@@ -11,6 +11,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/romankravchuk/pastebin/config"
 	"github.com/romankravchuk/pastebin/internal/controller/http/middleware/logger"
+	"github.com/romankravchuk/pastebin/internal/controller/http/response"
 	"github.com/romankravchuk/pastebin/internal/controller/http/v1/auth"
 	"github.com/romankravchuk/pastebin/internal/controller/http/v1/paste"
 	"github.com/romankravchuk/pastebin/internal/usecase"
@@ -40,31 +41,32 @@ import (
 //	@in							header
 //	@name						Authorization
 func NewRouter(mux chi.Router, cfg *config.Config, l *log.Logger) error {
-	pg, err := postgres.New(cfg.Postgres.DSN)
+	postgreClient, err := postgres.New(cfg.Postgres.DSN)
 	if err != nil {
 		return err
 	}
 
-	m, err := minio.New(cfg.Minio.DSN, cfg.Minio.AccessKey, cfg.Minio.SecretKey)
+	minioClient, err := minio.New(cfg.Minio.DSN, cfg.Minio.AccessKey, cfg.Minio.SecretKey)
 	if err != nil {
 		return err
 	}
 
-	rd, err := redis.New(cfg.Redis.DSN)
+	redisClient, err := redis.New(cfg.Redis.DSN)
 	if err != nil {
 		return err
 	}
 
 	var (
-		pcache   = cache.NewPastesCache(rd)
-		pblob    = blob.New(m)
-		prepo    = repo.NewPastesRepo(pg)
-		urepo    = repo.NewUsersRepo(pg)
-		oauthapi = webapi.New(cfg.OAuth.ClientID, cfg.OAuth.ClientSecret)
-		auc      = usecase.NewAuth(urepo, oauthapi)
-		puc      = usecase.NewPastes(prepo, pblob, pcache)
+		pastesCache   = cache.NewPastesCache(redisClient)
+		pastesBlob    = blob.NewPastesBlobStorage(minioClient)
+		pastesRepo    = repo.NewPastesRepositry(postgreClient)
+		usersRepo     = repo.NewUsersRepositry(postgreClient)
+		oauthapi      = webapi.NewGithubAPI(cfg.OAuth.ClientID, cfg.OAuth.ClientSecret)
+		authUsecase   = usecase.NewAuth(usersRepo, oauthapi)
+		pastesUsecase = usecase.NewPastes(pastesRepo, pastesBlob, pastesCache)
 	)
 
+	mux.Use(middleware.RedirectSlashes)
 	mux.Use(middleware.RealIP)
 	mux.Use(logger.New(l))
 	mux.Use(cors.Handler(cors.Options{
@@ -78,13 +80,13 @@ func NewRouter(mux chi.Router, cfg *config.Config, l *log.Logger) error {
 
 	mux.Get("/swagger/*", swagger.Handler())
 
-	mux.Get("/healthz", func(w http.ResponseWriter, r *http.Request) { render.Status(r, http.StatusOK) })
+	mux.Get("/healthz", func(w http.ResponseWriter, r *http.Request) { response.OK(w, r, render.M{"status": "alive"}) })
 
 	mux.Method(http.MethodGet, "/metrics", promhttp.Handler())
 
-	auth.New(mux, auc, l)
+	auth.MountRoutes(mux, authUsecase, l)
 
-	paste.New(mux, puc, l)
+	paste.MountRoutes(mux, pastesUsecase, l)
 
 	return nil
 }

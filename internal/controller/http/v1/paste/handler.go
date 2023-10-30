@@ -24,7 +24,7 @@ type handler struct {
 	tm time.Duration
 }
 
-func New(mux chi.Router, uc usecase.Pastes, l *log.Logger) {
+func MountRoutes(mux chi.Router, uc usecase.Pastes, l *log.Logger) {
 	p := &handler{
 		l:  l,
 		uc: uc,

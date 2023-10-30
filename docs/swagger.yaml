@@ -96,6 +96,49 @@ info:
   title: Pastebin API
   version: "1.0"
 paths:
+  /:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Уникальный код, сгенерированный OAuth2 приложением
+        in: body
+        name: code
+        required: true
+        schema:
+          $ref: '#/definitions/CreateTokenRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                properties:
+                  user:
+                    $ref: '#/definitions/UserInfo'
+                type: object
+              message:
+                type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              message:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              message:
+                type: string
+            type: object
+      summary: Регистрация нового пользователя с помощью Github OAuth 2.0
+      tags:
+      - auth
   /pastes:
     post:
       consumes:

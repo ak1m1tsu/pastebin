@@ -71,21 +71,21 @@ type CreatePasteBody struct {
 // @description Тело ответа на создание пасты.
 type PasteResponse struct {
 	// Уникальный идентификатор
-	Hash string `json:"hash"`
+	Hash string `json:"hash" example:"HrEQaEvs"`
 	// Название
-	Title string `json:"title,omitempty"`
+	Title string `json:"title,omitempty" example:"The paste"`
 	// Текст
-	Text string `json:"text"`
+	Text string `json:"text" example:"The some paste"`
 	// Формат текста
-	Format string `json:"format"`
+	Format string `json:"format" example:"plaintext"`
 	// Дата создания
-	CreatedAt string `json:"created_at"`
-	// Время, через которое паста становится не доступной
-	ExpiresAt string `json:"expires_at"`
-} // @name PasteResponse
+	CreatedAt string `json:"created_at" example:"Sun, 29 Oct 2023 20:38:41 +08"`
+	// Дата сгорания
+	ExpiresAt string `json:"expires_at" example:"Sun, 29 Oct 2023 20:38:41 +08"`
+} // @name PasteInfo
 
 // @description Тело запроса для разблокировки пасты.
 type UnlockPasteBody struct {
 	// Пароль
-	Password string `json:"password" example:"hello" validate:"required,max=255"`
+	Password string `json:"password" example:"password for security" validate:"required,max=255"`
 } // @name UnlockPasteBody
