@@ -1,4 +1,4 @@
-include .envrc
+include .env
 export
 
 LOCAL_BIN=$(CURDIR)/bin
@@ -33,7 +33,7 @@ deps:
 swag-v1:
 	swag fmt && swag init --pd -g internal/controller/http/v1/router.go
 
-## run: start the cmd/app application
+## run/app: start the cmd/app application
 .PHONY: run/app
 run/app: swag-v1
 	go run ./cmd/app
@@ -44,17 +44,17 @@ migrations/new:
 	@echo 'Creating migration files for ${name}'
 	migrate create -seq -ext=.sql -dir=./migrations ${name}
 
-## migrations/up: apply all up database migrations
+## migrations/up POSTGRES_DSN=$1: apply all up database migrations
 .PHONY: migrations/up
 migrations/up: confirm
 	@echo 'Running up migrations...'
-	migrate -path="./migrations" -database ${POSTGRES_DSN} up
+	migrate -path ./migrations -database ${POSTGRES_DSN} up
 
-## migrations/down: apply all down database migrations
+## migrations/down POSTGRES_DSN=$1: apply all down database migrations
 .PHONY: migrations/down
 migrations/down: confirm
 	@echo 'Running down migrations...'
-	migrate -path="./migrations" -database ${POSTGRES_DSN} down
+	migrate -path ./migrations -database ${POSTGRES_DSN} down
 
 ## mocks/generate: generate mocks for interfaces
 .PHONY: mocks/generate

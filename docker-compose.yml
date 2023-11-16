@@ -15,17 +15,6 @@ networks:
     driver: bridge
 
 services:
-  web:
-    build:
-      context: web
-    container_name: web
-    ports:
-      - "80:80"
-    depends_on:
-      - nginx
-    networks:
-      - pastebinnet
-
   nginx:
     image: nginx:alpine
     container_name: loadbalancer
@@ -53,9 +42,14 @@ services:
       PG_DSN: ${PG_DSN}
       REDIS_DSN: ${REDIS_DSN}
       MINIO_DSN: ${MINIO_DSN}
-      PORT: ${EXPOSE_PORT}
+      PORT: ${APP2_PORT}
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+      MINIO_ACTION_TIMEOUT: ${MINIO_ACTION_TIMEOUT}
+      OAUTH_CLIENT_ID: ${OAUTH_CLIENT_ID}
+      OAUTH_CLIENT_SECRET: ${OAUTH_CLIENT_SECRET}
     ports:
-      - ${PORT}:${EXPOSE_PORT}
+      - ${APP2_PORT}
     networks:
       - pastebinnet
     depends_on:
@@ -73,9 +67,14 @@ services:
       PG_DSN: ${PG_DSN}
       REDIS_DSN: ${REDIS_DSN}
       MINIO_DSN: ${MINIO_DSN}
-      PORT: ${PORT}
+      PORT: ${APP1_PORT}
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+      MINIO_ACTION_TIMEOUT: ${MINIO_ACTION_TIMEOUT}
+      OAUTH_CLIENT_ID: ${OAUTH_CLIENT_ID}
+      OAUTH_CLIENT_SECRET: ${OAUTH_CLIENT_SECRET}
     ports:
-      - ${EXPOSE_PORT}:${PORT}
+      - ${APP1_PORT}
     networks:
       - pastebinnet
     depends_on:
@@ -90,7 +89,7 @@ services:
     environment:
       GF_INSTALL_PLUGINS: grafana-clock-panel
     ports:
-      - 3000:3000
+      - "3000:3000"
     volumes:
       - grafana:/var/lib/grafana
     networks:
@@ -103,7 +102,7 @@ services:
     container_name: prometheus
     restart: always
     ports:
-      - 9090:9090
+      - "9090:9090"
     volumes:
       - ./build/prometheus:/etc/prometheus
     command:
@@ -136,7 +135,7 @@ services:
       timeout: 5s
       retries: 5
     ports:
-      - 5432:5432
+      - "5432:5432"
     volumes:
       - postgres:/data/postgres
     networks:
@@ -147,11 +146,13 @@ services:
     container_name: redis
     restart: always
     ports:
-      - 6379:6379
+      - "6379:6379"
     environment:
       REDIS_PASSWORD: ${REDIS_PASSWORD}
     volumes:
       - redis:/data
+    networks:
+      - pastebinnet
 
   minio:
     image: minio/minio

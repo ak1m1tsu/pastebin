@@ -45,26 +45,32 @@ definitions:
         description: Github oauth2 code
         type: string
     type: object
-  PasteResponse:
+  PasteInfo:
     description: Тело ответа на создание пасты.
     properties:
       created_at:
         description: Дата создания
+        example: Sun, 29 Oct 2023 20:38:41 +08
         type: string
       expires_at:
-        description: Время, через которое паста становится не доступной
+        description: Дата сгорания
+        example: Sun, 29 Oct 2023 20:38:41 +08
         type: string
       format:
         description: Формат текста
+        example: plaintext
         type: string
       hash:
         description: Уникальный идентификатор
+        example: HrEQaEvs
         type: string
       text:
         description: Текст
+        example: The some paste
         type: string
       title:
         description: Название
+        example: The paste
         type: string
     type: object
   UnlockPasteBody:
@@ -72,7 +78,7 @@ definitions:
     properties:
       password:
         description: Пароль
-        example: hello
+        example: password for security
         maxLength: 255
         type: string
     required:
@@ -160,7 +166,7 @@ paths:
               data:
                 properties:
                   paste:
-                    $ref: '#/definitions/PasteResponse'
+                    $ref: '#/definitions/PasteInfo'
                   url:
                     type: string
                 type: object
@@ -264,7 +270,7 @@ paths:
               data:
                 properties:
                   paste:
-                    $ref: '#/definitions/PasteResponse'
+                    $ref: '#/definitions/PasteInfo'
                 type: object
               message:
                 type: string
@@ -319,7 +325,7 @@ paths:
               data:
                 properties:
                   paste:
-                    $ref: '#/definitions/PasteResponse'
+                    $ref: '#/definitions/PasteInfo'
                 type: object
               message:
                 type: string

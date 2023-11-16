@@ -116,7 +116,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "paste": {
-                                            "$ref": "#/definitions/PasteResponse"
+                                            "$ref": "#/definitions/PasteInfo"
                                         },
                                         "url": {
                                             "type": "string"
@@ -205,7 +205,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "paste": {
-                                            "$ref": "#/definitions/PasteResponse"
+                                            "$ref": "#/definitions/PasteInfo"
                                         }
                                     }
                                 },
@@ -363,7 +363,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "paste": {
-                                            "$ref": "#/definitions/PasteResponse"
+                                            "$ref": "#/definitions/PasteInfo"
                                         }
                                     }
                                 },
@@ -529,33 +529,39 @@ const docTemplate = `{
                 }
             }
         },
-        "PasteResponse": {
+        "PasteInfo": {
             "description": "Тело ответа на создание пасты.",
             "type": "object",
             "properties": {
                 "created_at": {
                     "description": "Дата создания",
-                    "type": "string"
+                    "type": "string",
+                    "example": "Sun, 29 Oct 2023 20:38:41 +08"
                 },
                 "expires_at": {
-                    "description": "Время, через которое паста становится не доступной",
-                    "type": "string"
+                    "description": "Дата сгорания",
+                    "type": "string",
+                    "example": "Sun, 29 Oct 2023 20:38:41 +08"
                 },
                 "format": {
                     "description": "Формат текста",
-                    "type": "string"
+                    "type": "string",
+                    "example": "plaintext"
                 },
                 "hash": {
                     "description": "Уникальный идентификатор",
-                    "type": "string"
+                    "type": "string",
+                    "example": "HrEQaEvs"
                 },
                 "text": {
                     "description": "Текст",
-                    "type": "string"
+                    "type": "string",
+                    "example": "The some paste"
                 },
                 "title": {
                     "description": "Название",
-                    "type": "string"
+                    "type": "string",
+                    "example": "The paste"
                 }
             }
         },
@@ -570,7 +576,7 @@ const docTemplate = `{
                     "description": "Пароль",
                     "type": "string",
                     "maxLength": 255,
-                    "example": "hello"
+                    "example": "password for security"
                 }
             }
         },

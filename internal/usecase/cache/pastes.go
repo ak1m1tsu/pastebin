@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-
 	"github.com/redis/go-redis/v9"
 	"github.com/romankravchuk/pastebin/internal/entity"
 	"github.com/romankravchuk/pastebin/internal/usecase"

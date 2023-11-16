@@ -7,9 +7,9 @@ import (
 )
 
 const (
-	defaultReadTimeout  = 3 * time.Second
-	defaultWriteTimeout = 3 * time.Second
-	defaultDialTimeout  = 5 * time.Second
+	defaultReadTimeout  = 6 * time.Second
+	defaultWriteTimeout = 6 * time.Second
+	defaultDialTimeout  = 10 * time.Second
 )
 
 type Redis struct {
